@@ -28,8 +28,8 @@ Mạnh thường quân chuyển tiền qua ngân hàng nhưng khó kiểm tra kh
 **Đơn giản hóa trong MVP (có làm, nhưng bản nhẹ hơn):**
 
 | Hạng mục | Lý do cắt | Thay thế trong MVP |
-|---|---|---|
-| Chữ ký kép School + LocalAuth để chuyển sang `RECEIVING` | Cán bộ xã/phường hoặc giáo viên ngại đăng nhập hệ thống mới để "ký duyệt" | Chỉ cần 1 bên duyệt: LocalAuth ký, hoặc Admin upload file PDF/ảnh có dấu mộc xác nhận của địa phương làm "Minh chứng duyệt" (off-chain evidence) |
+| --- | --- | --- |
+| Chữ ký kép School + LocalAuth để chuyển sang `RECEIVING` | Cán bộ xã/phường hoặc giáo viên ngại đăng nhập hệ thống mới để "ký duyệt" | Chỉ LocalAuth ký, không cần School ký thêm |
 | `SUSPENDED` và `REVOKED` | Quá nhiều nhánh rẽ (edge cases) cho việc gian lận | Cờ `IS_ACTIVE` (Boolean). Phát hiện gian lận thì Admin ẩn hồ sơ khỏi trang công khai và ghi lý do vào audit log |
 | Versioning cho hồ sơ và báo cáo | Là tính năng của hệ thống CMS/ERP phức tạp | Cho phép sửa trực tiếp (overwrite), lưu thay đổi vào bảng `audit_logs` |
 | Merkle Tree và batching | Là tư duy của hệ thống production có hàng triệu giao dịch | Ghi trực tiếp hash của từng bản ghi lên testnet hoặc L2 giá rẻ (Base, Polygon, Arbitrum) |
@@ -60,8 +60,8 @@ Mạnh thường quân chuyển tiền qua ngân hàng nhưng khó kiểm tra kh
 ## 3. Vai trò người dùng
 
 | Vai trò | Quyền chính |
-|---|---|
-| Admin | Tạo hồ sơ, tải minh chứng duyệt, tiếp nhận giao dịch chưa khớp, nhập báo cáo và minh chứng thay Người nhận, ẩn hồ sơ, theo dõi hệ thống |
+| --- | --- |
+| Admin | Tạo hồ sơ, tiếp nhận giao dịch chưa khớp, nhập báo cáo và minh chứng thay Người nhận, ẩn hồ sơ, theo dõi hệ thống |
 | School | Xem dữ liệu thuộc trường, gán giao dịch chưa khớp, xác nhận khoản quyên góp và báo cáo (theo quy tắc ở mục 6) |
 | LocalAuth | Duyệt hồ sơ, xem dữ liệu thuộc địa phương, xác nhận khoản quyên góp và báo cáo |
 | Người nhận | Gửi ảnh hóa đơn, minh chứng qua Zalo cho Admin/Trường (không thao tác trực tiếp trên hệ thống) |
@@ -75,7 +75,6 @@ Việc ghi hash lên blockchain do Backend Worker thực hiện, không phải v
 - Được gửi hồ sơ sang trạng thái `PENDING_APPROVAL`.
 - Khi hồ sơ ở trạng thái `PENDING_APPROVAL`, Admin không được sửa trực tiếp.
 - Nếu LocalAuth yêu cầu chỉnh sửa, hệ thống ghi nhận lý do và đưa hồ sơ về `DRAFT` để Admin sửa.
-- Được upload "Minh chứng duyệt" (PDF/ảnh có dấu mộc xác nhận của địa phương).
 - Nhập báo cáo và minh chứng thay Người nhận.
 - Được ẩn hồ sơ (`IS_ACTIVE = false`) và phải ghi lý do vào audit log.
 - Không được tự ký hoặc tự duyệt hồ sơ.
@@ -100,9 +99,7 @@ Việc ghi hash lên blockchain do Backend Worker thực hiện, không phải v
 
 ### Quy tắc duyệt hồ sơ
 
-- Hồ sơ chuyển sang `RECEIVING` khi có một trong hai:
-  - LocalAuth ký duyệt;
-  - Admin upload "Minh chứng duyệt" có dấu mộc xác nhận của địa phương.
+- Hồ sơ chuyển sang `RECEIVING` khi LocalAuth ký duyệt.
 - Nếu LocalAuth yêu cầu chỉnh sửa, hồ sơ không được chuyển sang `RECEIVING`.
 - Mọi thay đổi hồ sơ ở trạng thái `DRAFT` được ghi vào `audit_logs`.
 
@@ -111,7 +108,7 @@ Việc ghi hash lên blockchain do Backend Worker thực hiện, không phải v
 ## 4. Các khái niệm chính
 
 | Khái niệm | Mô tả |
-|---|---|
+| --- | --- |
 | Hồ sơ hỗ trợ | Hồ sơ của một trẻ cần được hỗ trợ |
 | Donation | Khoản tiền được chuyển vào tài khoản thụ hưởng |
 | Reconciliation | Quá trình đối chiếu giao dịch với hồ sơ |
@@ -138,8 +135,8 @@ Việc ghi hash lên blockchain do Backend Worker thực hiện, không phải v
 2. Hệ thống lưu hồ sơ ở trạng thái `DRAFT`.
 3. Admin gửi hồ sơ để duyệt.
 4. Hệ thống khóa dữ liệu hồ sơ (`PENDING_APPROVAL`).
-5. LocalAuth xem phần dữ liệu được cấp quyền, hoặc Admin upload "Minh chứng duyệt".
-6. LocalAuth ký duyệt (nếu duyệt trên hệ thống).
+5. LocalAuth xem phần dữ liệu được cấp quyền.
+6. LocalAuth ký duyệt.
 7. Hệ thống tạo commitment.
 8. Backend Worker ghi commitment lên blockchain.
 9. Hồ sơ chuyển sang trạng thái `RECEIVING`.
@@ -236,7 +233,7 @@ WAITING_FOR_REPORT
 ```
 
 - `DRAFT`: Admin đang tạo hoặc chỉnh sửa hồ sơ.
-- `PENDING_APPROVAL`: Hồ sơ đã khóa, chờ LocalAuth ký hoặc Admin upload "Minh chứng duyệt".
+- `PENDING_APPROVAL`: Hồ sơ đã khóa, chờ LocalAuth ký duyệt.
 - `RECEIVING`: Hồ sơ bắt đầu nhận quyên góp.
 - `CLOSED`: Hồ sơ đạt mục tiêu hoặc hết thời hạn nhận tiền.
 - `WAITING_FOR_REPORT`: Đã đóng nhận và đang chờ báo cáo.
@@ -303,7 +300,7 @@ PENDING_TRANSFER
 Khoản quyên góp không được quay lại trạng thái trước và không được xóa. Mọi thay đổi trạng thái phải tạo audit log.
 
 | Chuyển trạng thái | Điều kiện | Thực hiện bởi |
-|---|---|---|
+| --- | --- | --- |
 | `PENDING_TRANSFER → RECONCILED` | Webhook xác nhận tiền vào và mã tham chiếu khớp hồ sơ | Hệ thống |
 | `PENDING_TRANSFER → UNMATCHED` | Webhook xác nhận tiền vào nhưng không tìm thấy mã tham chiếu hợp lệ | Hệ thống |
 | `UNMATCHED → RECONCILED` | Gán giao dịch vào hồ sơ và ghi rõ lý do | Admin hoặc School |
@@ -415,11 +412,11 @@ Một chức năng được xem là hoàn thành khi:
 Các tính năng có giá trị, nhưng không cần để chứng minh core:
 
 | Nhóm | Hạng mục |
-|---|---|
+| --- | --- |
 | Mạnh thường quân | One-time link đến thăm; quy trình đăng ký chuyến thăm; log truy cập chi tiết cho từng one-time link; tài khoản người dùng cho mạnh thường quân |
 | Tiền và đối soát | Xử lý hoàn tiền; quy tắc phân bổ tiền vượt mức; quyên góp định kỳ; hỗ trợ nhiều loại tiền tệ; theo dõi một khoản tiền xuyên suốt đến từng khoản chi; tích hợp ngân hàng hoặc MoMo thật |
 | Blockchain | Trang block explorer riêng; hỗ trợ nhiều blockchain; Merkle batch tối ưu gas ở quy mô lớn; ví crypto và stablecoin; smart contract giữ tiền; cơ chế hoàn trả tự động; multi-signature ở cấp blockchain thay vì chữ ký nghiệp vụ |
-| Vận hành và quản trị | Thông báo email, SMS hoặc push notification; dashboard phân tích nâng cao; cơ chế khiếu nại; blacklist |
+| Vận hành và quản trị | Thông báo email, SMS hoặc push notification; dashboard phân tích nâng cao; cơ chế khiếu nại; blacklist; đường duyệt hồ sơ bằng "Minh chứng duyệt" do Admin upload (PDF/ảnh có dấu mộc xác nhận của địa phương), kèm cờ `APPROVED_VIA_EVIDENCE` trong commitment, hiển thị công khai khác với duyệt bằng chữ ký, và audit log ghi người upload cùng hash của file |
 | Kỹ thuật khác | Tự động loại bỏ metadata ảnh nâng cao; ứng dụng mobile; Người nhận tự nộp báo cáo; versioning hồ sơ và báo cáo; luồng đình chỉ/thu hồi nhiều bước |
 
 ---
@@ -429,7 +426,7 @@ Các tính năng có giá trị, nhưng không cần để chứng minh core:
 Các phần này dễ làm dự án phức tạp hoặc tạo rủi ro lớn:
 
 | Hạng mục | Rủi ro chính |
-|---|---|
+| --- | --- |
 | Giữ tiền thật trong smart contract | Rủi ro tài chính và pháp lý |
 | Tự động quy đổi USDT/token sang VND | Rủi ro tài chính và pháp lý |
 | Tích hợp thanh toán thật trước khi hoàn thiện cơ chế đối soát | Chưa kiểm soát được đối soát |
@@ -446,5 +443,11 @@ Các phần này dễ làm dự án phức tạp hoặc tạo rủi ro lớn:
 
 ## 12. Điểm cần xác nhận
 
-- **Duyệt hồ sơ:** "LocalAuth ký" hoặc "Admin upload Minh chứng duyệt" đang là hai đường song song. Cần chốt dùng đường nào làm mặc định cho demo.
-- **Xác nhận khoản quyên góp và báo cáo:** spec vẫn giữ quy tắc School + LocalAuth (tài khoản người giám hộ) và LocalAuth (tài khoản trường). Nếu muốn giảm rào cản UX tương tự phần duyệt hồ sơ, cần cập nhật mục 6.
+Hiện chưa có điểm nào còn mở.
+
+### Đã chốt
+
+- **Duyệt hồ sơ:** chỉ LocalAuth ký trên hệ thống. Đường Admin upload "Minh chứng duyệt" chuyển sang mục 10.
+- **Xác nhận khoản quyên góp và báo cáo:** giữ nguyên quy tắc ở mục 6 (tài khoản người giám hộ cần School và LocalAuth; tài khoản trường cần LocalAuth).
+
+aa
