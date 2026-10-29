@@ -449,3 +449,5 @@ Hiện chưa có điểm nào còn mở.
 
 - **Duyệt hồ sơ:** chỉ LocalAuth ký trên hệ thống. Đường Admin upload "Minh chứng duyệt" chuyển sang mục 10.
 - **Xác nhận khoản quyên góp và báo cáo:** giữ nguyên quy tắc ở mục 6 (tài khoản người giám hộ cần School và LocalAuth; tài khoản trường cần LocalAuth).
+
+aa
