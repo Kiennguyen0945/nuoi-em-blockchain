@@ -1,0 +1,209 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam linetype polyline
+hide circle
+title CHARITY LEDGER SYSTEM - MVP DATABASE (7 TABLES)
+
+' ========== TABLES ==========
+class users <<table>> {
+  + id: UUID <<PK>>
+  email: VARCHAR(255) <<UNIQUE>>
+  password_hash: TEXT
+  full_name: VARCHAR(150)
+  role: user_role
+  organization_name: VARCHAR(255)
+  organization_code: VARCHAR(100)
+  is_active: BOOLEAN
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+class audit_logs <<table>> {
+  + id: UUID <<PK>>
+  actor_id: UUID <<FK users.id nullable>>
+  entity_type: VARCHAR(50)
+  entity_id: UUID
+  action: VARCHAR(100)
+  from_status: VARCHAR(50) <<nullable>>
+  to_status: VARCHAR(50) <<nullable>>
+  reason: TEXT <<nullable>>
+  created_at: TIMESTAMP
+}
+
+class case_approvals <<table>> {
+  + id: UUID <<PK>>
+  support_case_id: UUID <<FK>>
+  case_version: INTEGER
+  approver_id: UUID <<FK users.id>>
+  approver_role: approval_role
+  status: approval_status
+  signature_hash: TEXT
+  reason: TEXT
+  approved_at: TIMESTAMP
+  created_at: TIMESTAMP
+}
+
+class donations <<table>> {
+  + id: UUID <<PK>>
+  support_case_id: UUID <<FK nullable>>
+  bank_reference: VARCHAR(150) <<UNIQUE>>
+  amount: DECIMAL(18,2)
+  currency: CHAR(3)
+  donor_name: VARCHAR(255) <<nullable>>
+  status: donation_status
+  matched_by: UUID <<FK users.id nullable>>
+  matched_at: TIMESTAMP
+  confirmed_at: TIMESTAMP
+  received_at: TIMESTAMP
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+class reports <<table>> {
+  + id: UUID <<PK>>
+  support_case_id: UUID <<FK>>
+  version: INTEGER
+  status: report_status
+  total_spent: DECIMAL(18,2)
+  currency: CHAR(3)
+  description: TEXT
+  submitted_by: UUID <<FK users.id>>
+  submitted_at: TIMESTAMP
+  approved_at: TIMESTAMP
+  created_at: TIMESTAMP
+}
+
+class support_cases <<table>> {
+  + id: UUID <<PK>>
+  public_code: VARCHAR(50) <<UNIQUE>>
+  version: INTEGER
+  status: case_status
+  title: VARCHAR(255)
+  public_summary: TEXT
+  target_amount: DECIMAL(18,2)
+  currency: CHAR(3)
+  school_id: UUID <<FK users.id>>
+  local_auth_id: UUID <<FK users.id>>
+  recipient_id: UUID <<FK users.id>>
+  created_by: UUID <<FK users.id>>
+  published_at: TIMESTAMP
+  closed_at: TIMESTAMP
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+class blockchain_records <<table>> {
+  + id: UUID <<PK>>
+  entity_type: VARCHAR(50)
+  entity_id: UUID
+  entity_version: INTEGER
+  commitment_hash: VARCHAR(128)
+  merkle_root: VARCHAR(128) <<nullable>>
+  chain_id: BIGINT
+  tx_hash: VARCHAR(128) <<nullable>>
+  status: blockchain_status
+  recorded_at: TIMESTAMP
+  created_at: TIMESTAMP
+}
+
+' ========== JSON NOTE ==========
+note as JSON_NOTE
+  **Các cột JSONB (không hiển thị trong bảng)**
+  --
+  **support_cases**
+  . private_data_json : JSONB  - dữ liệu riêng tư của hoàn cảnh
+  . snapshot_json : JSONB  - ảnh chụp nội dung tại thời điểm duyệt/công bố
+  --
+  **donations**
+  . flags_json : JSONB  - các cờ cảnh báo khi đối soát
+  . raw_webhook_json : JSONB  - payload gốc từ webhook ngân hàng
+  --
+  **reports**
+  . expense_items_json : JSONB  - danh sách khoản chi
+  . evidence_json : JSONB  - minh chứng đính kèm
+  . approved_by_json : JSONB  - thông tin người duyệt báo cáo
+  --
+  **audit_logs**
+  . metadata_json : JSONB  - dữ liệu bổ sung của hành động
+end note
+
+' ========== ENUMS ==========
+package "ENUM TYPES" {
+  enum user_role {
+    ADMIN
+    SCHOOL
+    LOCAL_AUTH
+    RECIPIENT
+    BLOCKCHAIN_WRITER
+  }
+  enum case_status {
+    DRAFT
+    PENDING_APPROVAL
+    RECEIVING
+    CLOSED
+    WAITING_FOR_REPORT
+    REPORT_SUBMITTED
+    REPORT_APPROVED
+    OVERDUE
+    SUSPENDED
+    REVOKED
+  }
+  enum approval_role {
+    SCHOOL
+    LOCAL_AUTH
+  }
+  enum approval_status {
+    PENDING
+    APPROVED
+    REJECTED
+    REVISION_REQUESTED
+  }
+  enum donation_status {
+    PENDING_TRANSFER
+    UNMATCHED
+    RECONCILED
+    CONFIRMED
+    EXPIRED
+  }
+  enum report_status {
+    DRAFT
+    SUBMITTED
+    REVISION_REQUESTED
+    APPROVED
+  }
+  enum blockchain_status {
+    PENDING
+    SUBMITTED
+    CONFIRMED
+    FAILED
+  }
+}
+
+' ========== RELATIONSHIPS ==========
+users "1" -down- "0..*" case_approvals : approves
+users "1" -down- "0..*" donations : matches
+users "1" -down- "0..*" reports : submits
+users "1" -right- "0..*" audit_logs : acts
+users "1" -- "0..*" support_cases : creates
+
+support_cases "1" -up- "0..*" case_approvals : has
+support_cases "1" -up- "0..*" donations : receives
+support_cases "1" -up- "0..*" reports : has
+
+' ========== LAYOUT HINTS (ẩn) ==========
+case_approvals -[hidden]right- donations
+donations -[hidden]right- reports
+
+support_cases -[hidden]down- blockchain_records
+blockchain_records -[hidden]right- JSON_NOTE
+JSON_NOTE -[hidden]right- user_role
+
+user_role -[hidden]right- case_status
+case_status -[hidden]right- approval_role
+user_role -[hidden]down- approval_status
+approval_status -[hidden]right- donation_status
+donation_status -[hidden]right- report_status
+report_status -[hidden]right- blockchain_status
+@enduml
