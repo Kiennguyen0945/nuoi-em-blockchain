@@ -217,19 +217,24 @@ DRAFT
   → RECEIVING
   → CLOSED
   → WAITING_FOR_REPORT
+
+PENDING_APPROVAL
+  → REVISION_REQUESTED → DRAFT
+  → REJECTED
+
+Report (from WAITING_FOR_REPORT onward):
+WAITING_FOR_REPORT
+  → REPORT_DRAFT
   → REPORT_SUBMITTED
   → REPORT_APPROVED
 
-PENDING_APPROVAL
-  → REVISION_REQUESTED
-  → DRAFT
-
 REPORT_SUBMITTED
   → REPORT_REVISION_REQUESTED
-  → REPORT_SUBMITTED
+  → REPORT_SUBMITTED   (after Admin edits and resubmits)
 
 WAITING_FOR_REPORT
   → OVERDUE
+  → REPORT_DRAFT       (can still submit after the deadline)
 ```
 
 - `DRAFT`: Admin đang tạo hoặc chỉnh sửa hồ sơ.
@@ -450,4 +455,114 @@ Hiện chưa có điểm nào còn mở.
 - **Duyệt hồ sơ:** chỉ LocalAuth ký trên hệ thống. Đường Admin upload "Minh chứng duyệt" chuyển sang mục 10.
 - **Xác nhận khoản quyên góp và báo cáo:** giữ nguyên quy tắc ở mục 6 (tài khoản người giám hộ cần School và LocalAuth; tài khoản trường cần LocalAuth).
 
-aa
+
+
+## Bổ sung
+
+Vòng đời Donation
+MVP không tạo trước Donation ở PENDING_TRANSFER. Hệ thống chỉ tạo Donation sau khi nhận và xác thực webhook thể hiện giao dịch đã phát sinh.
+Mã tham chiếu
+Mã tham chiếu là mã được đưa vào nội dung chuyển khoản hoặc VietQR để xác định khoản tiền dành cho hồ sơ nào.
+
+Nếu mã tham chiếu chỉ được sử dụng một lần, mỗi yêu cầu chuyển tiền sẽ có một mã riêng:
+REF-001 → Donation → CASE-001
+REF-002 → Donation → CASE-001
+Như vậy, một hồ sơ vẫn có thể nhận tiền từ nhiều người, nhưng mỗi Donation có một mã tham chiếu riêng.
+
+Cần phân biệt:
+- reference_code: dùng để tìm hồ sơ hỗ trợ;
+- provider_transaction_id: dùng để nhận diện giao dịch duy nhất và chống webhook trùng.
+Webhook không khớp
+Nếu webhook không tìm thấy mã tham chiếu hợp lệ, hệ thống tạo Donation mới ở UNMATCHED. Admin hoặc School kiểm tra, gán Donation vào hồ sơ phù hợp và chuyển sang RECONCILED.
+Webhook trùng
+Hệ thống sử dụng provider_transaction_id để nhận diện giao dịch đã tồn tại. Nếu nhận lại cùng mã này:
+- không tạo Donation mới;
+- không cộng tiền lần nữa;
+- giữ nguyên trạng thái Donation hiện có;
+- ghi nhận webhook là trùng hoặc đã xử lý.
+Tổng tiền công khai
+Chỉ các Donation ở trạng thái CONFIRMED mới được tính vào tổng tiền công khai.
+Luồng xử lý đề xuất
+Tạo mã VietQR và mã tham chiếu
+→ Mạnh thường quân chuyển tiền
+→ Hệ thống nhận webhook
+→ Kiểm tra provider_transaction_id
+   ├─ Đã tồn tại → bỏ qua webhook trùng
+   └─ Chưa tồn tại
+       → Kiểm tra reference_code
+          ├─ Khớp hồ sơ → tạo Donation ở RECONCILED
+          └─ Không khớp → tạo Donation ở UNMATCHED
+
+UNMATCHED
+→ Admin hoặc School gán vào hồ sơ
+→ RECONCILED
+→ Người có thẩm quyền xác nhận
+→ CONFIRMED
+→ Tính vào tổng tiền công khai
+
+
+
+1. Với `recipient_account_type = GUARDIAN`, hệ thống có bắt buộc đủ xác nhận của cả School và LocalAuth mới chuyển Donation sang `CONFIRMED` không? Nếu một bên đã xác nhận nhưng bên còn lại từ chối hoặc không phản hồi thì Donation ở trạng thái nào?
+Tôi nghĩ trong phạm vi hiện tại thì tiền chỉ cần chuyển sang SCHOOL thôi, không cần GUARD cho phiên bản hiện tại. Vì hướng đến trẻ em vùng cao và gia đình khó khăn
+School thì chỉ cần local auth ký
+
+Bổ sung trạng thái REJECTED nếu bị một bên từ chối
+
+2. Với `recipient_account_type = SCHOOL`, chỉ LocalAuth xác nhận có đủ để chuyển sang `CONFIRMED` không? Có cần lưu riêng người xác nhận, thời điểm và kết quả trong bảng `confirmations` không?
+
+Có, cần lưu riêng người xác nhận và confirmations
+Tên tài khoản
+Thời điểm
+Kết quả
+
+
+3. `recipient_account_type` được khai báo ở cấp hồ sơ hay cấp từng Donation? Nếu một hồ sơ thay đổi loại tài khoản nhận tiền sau khi đã có giao dịch, các Donation cũ áp dụng quy tắc xác nhận nào?
+
+MVP chỉ hỗ trợ tài khoản nhà trường làm tài khoản nhận tiền. recipient_account_type được cố định là SCHOOL và không cho phép chọn GUARDIAN. Hồ sơ được phép thay đổi tài khoản nhận tiền, nhưng thay đổi chỉ áp dụng cho các Donation phát sinh sau thời điểm cập nhật. Các Donation cũ lưu thông tin tài khoản tại thời điểm giao dịch và không bị ảnh hưởng. Mọi thay đổi tài khoản phải có audit log.
+Donation.recipient_account_id
+
+
+School và LocalAuth được ẩn hồ sơ, Admin thì không. School chỉ ẩn hồ sơ thuộc trường mình, LocalAuth chỉ ẩn hồ sơ thuộc địa phương mình, và cả hai phải nhập lý do. Khi hồ sơ đã bị ẩn, LocalAuth được bật lại tự do, kể cả hồ sơ do School ẩn hay do chính mình ẩn, không cần ai xác nhận thêm nhưng phải nhập lý do. School không tự bật lại được: School gửi yêu cầu bật lại kèm lý do trên hệ thống, và LocalAuth chấp nhận hoặc từ chối (từ chối cũng phải ghi lý do). Hồ sơ giữ nguyên trạng thái trước khi bị ẩn và chỉ cờ IS_ACTIVE đổi lại. Các giao dịch đã gắn cờ AFTER_SUSPENSION vẫn giữ cờ đó. Mọi thao tác ẩn, yêu cầu bật lại, chấp nhận, từ chối và bật lại đều ghi audit log gồm người làm, vai trò, thời điểm và lý do.
+
+Phạm vi dữ liệu của Admin. Admin được nhập và sửa dữ liệu cấp 2 khi hồ sơ còn ở DRAFT. Sau khi gửi duyệt, Admin chỉ xem được dữ liệu cấp 1. Hóa đơn thuộc dữ liệu hạn chế: Admin tải lên được, nhưng sau khi lưu chỉ xem lại được bản đã che thông tin nhận diện. Nếu tải nhầm, Admin được thay file khi báo cáo chưa gửi xác nhận, và mọi lần thay đều ghi vào audit log.
+
+
+
+Hồ sơ. Admin nhập và sửa dữ liệu cấp 2 khi hồ sơ ở DRAFT. Khi Admin gửi duyệt, hồ sơ sang PENDING_APPROVAL và bị khóa: Admin chỉ xem được dữ liệu cấp 1, không sửa được. Nếu LocalAuth yêu cầu chỉnh sửa, hệ thống ghi lý do, hồ sơ quay về DRAFT (qua REVISION_REQUESTED) và Admin lại được xem, sửa dữ liệu cấp 2 rồi gửi duyệt lại. Mọi thay đổi ghi vào audit_logs.
+
+Báo cáo. Admin nhập báo cáo và tải minh chứng khi báo cáo ở REPORT_DRAFT (nếu bạn chấp nhận thêm trạng thái này, xem bên dưới). Hóa đơn là dữ liệu hạn chế: sau khi lưu, Admin chỉ xem lại được bản đã che. Khi Admin gửi, báo cáo sang REPORT_SUBMITTED và bị khóa: Admin không sửa, không thay file. Nếu bên ký yêu cầu chỉnh sửa, báo cáo sang REPORT_REVISION_REQUESTED, Admin được sửa trực tiếp và thay file, rồi gửi lại về REPORT_SUBMITTED. Mọi lần sửa và thay file ghi vào audit_logs kèm hash file cũ và mới. Sau REPORT_APPROVED, báo cáo bị khóa hẳn.
+
+
+
+Cờ	Gắn khi nào	Gắn bởi
+RECEIVED_AFTER_CLOSING	Thời điểm tiền vào (theo giờ ngân hàng trong webhook) sau thời điểm hồ sơ sang CLOSED	Hệ thống, lúc đối soát
+RECEIVED_AFTER_SUSPENSION	Thời điểm tiền vào nằm trong khoảng hồ sơ đang IS_ACTIVE = false	Hệ thống, lúc đối soát
+RECEIVED_AFTER_EXPIRY	Webhook đến sau khi yêu cầu quyên góp đã EXPIRED	Hệ thống, lúc nhận webhook
+MANUALLY_ASSIGNED	Giao dịch không có mã tham chiếu, được Admin/School gán thủ công	Hệ thống, khi gán
+
+Thông tin L2 của hồ sơ
+L2 (hạn chế): tên trẻ, địa chỉ, tuổi, giới tính, ảnh trẻ, thông tin người giám hộ.
+
+## Báo cáo
+
+| Nội dung | Cấp | Ghi chú |
+| --- | --- | --- |
+| Tổng số tiền đã sử dụng | L2 khi nhập, **L1 sau `REPORT_APPROVED`** | Chỉ công khai sau khi được duyệt |
+| Mô tả ngắn việc sử dụng | L2 | Không công khai |
+| Ảnh minh chứng | L2 | Không công khai |
+
+Quy tắc này thay đổi so với bản cũ. Mục 7 trước đây công khai hạng mục chi, số tiền và ngày của từng khoản chi. Theo chốt mới, công khai chỉ còn **tổng số tiền đã sử dụng**. Nếu bạn chủ ý bỏ chi tiết từng khoản thì cần xóa các dòng đó ở mục 7. Nếu không, cần quyết định lại.
+
+Mạnh thường quân chỉ thấy tổng tiền đã chi, trạng thái báo cáo và hash. Họ không thấy mô tả hay ảnh.
+
+## Ma trận quyền
+
+| Dữ liệu | Admin | School | LocalAuth | Mạnh thường quân |
+| --- | --- | --- | --- | --- |
+| Hồ sơ L2, khi `DRAFT` | Xem và sửa | Không | Không | Không |
+| Hồ sơ L2, sau khi gửi duyệt | Không xem | Xem (trường mình) | Xem (địa phương mình) | Không |
+| Hồ sơ L1 (gồm câu chuyện) | Xem | Xem | Xem | Xem |
+| Mô tả và ảnh minh chứng, khi `REPORT_DRAFT` hoặc `REPORT_REVISION_REQUESTED` | Nhập, sửa, thay file | Không | Không | Không |
+| Mô tả và ảnh minh chứng, sau khi gửi | Chỉ xem bản che của ảnh, không xem lại mô tả L2 | Xem (trường mình) | Xem (địa phương mình) | Không |
+| Tổng tiền đã sử dụng | Nhập khi `REPORT_DRAFT` | Xem | Xem | Xem sau `REPORT_APPROVED` |
+

@@ -10,7 +10,7 @@ export default function HomePage() {
           <li>- Next.js (App Router, TypeScript)</li>
           <li>- Postgres (Docker / Neon) + Prisma</li>
           <li>- Hardhat + Solidity + viem</li>
-          <li>- Merkle tree + AES-256-GCM</li>
+          <li>- Ghi hash trực tiếp on-chain (Sepolia) + AES-256-GCM</li>
         </ul>
       </div>
     </main>
