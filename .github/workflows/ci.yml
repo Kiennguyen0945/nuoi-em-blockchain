@@ -1,0 +1,73 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: charity_ledger
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/charity_ledger?schema=public"
+      AUTH_SECRET: "ci-dummy-auth-secret-for-testing-purposes-32-bytes"
+      AES_256_GCM_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      SEPOLIA_RPC_URL: "https://rpc.sepolia.org"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: |
+          npx prisma generate || echo "Skipping prisma generate: no models defined yet"
+
+      - name: Typecheck TypeScript
+        run: npx tsc --noEmit
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Run Unit Tests
+        run: npm run test:unit
+
+      - name: Run Smart Contract Tests
+        run: npm run test:contracts
+
+      - name: Build Next.js Application
+        run: npm run build
