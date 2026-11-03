@@ -14,6 +14,7 @@
     "test": "npm run test:unit && npm run test:contracts",
     "test:unit": "tsx --env-file-if-exists=.env --test \"test/unit/**/*.test.ts\"",
     "test:contracts": "hardhat test",
+    "test:node": "tsx test/check-connection.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f"
