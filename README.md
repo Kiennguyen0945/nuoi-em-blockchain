@@ -48,6 +48,20 @@ thành quả cuối cùng:
 
 git switch -c "feat/nguyentrungkienhp202/nuo-6-s0-cap-nhat-dac-ta-mvp-theo-cac-diem-da-ra-soat"
 
+Sau khi code xong có thể kiểm tra chất lượng với
+- npm ci: cài đúng phiên bản thư viện.
+- npx prisma db push: kiểm tra schema database.
+- npx tsc --noEmit: kiểm tra lỗi TypeScript.
+- npm run lint: kiểm tra quy tắc và chất lượng code.
+- npm run test:unit: chạy unit test tại test/unit/.
+- npm run test:contracts: chạy test smart contract tại test/contracts/.
+- npm run build: kiểm tra ứng dụng có build thành công hay không.
+
+
+Sau đó push lên:
+git push -u origin feat/nguyentrungkienhp202/nuo-6-s0-cap-nhat-dac-ta-mvp-theo-cac-diem-da-ra-soat
+
+
 ### Quy trình thêm một tính năng mới
 
 1. **Xác định vị trí cần chỉnh sửa**
