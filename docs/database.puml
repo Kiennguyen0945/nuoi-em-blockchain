@@ -6,10 +6,47 @@ skinparam linetype polyline
 hide circle
 title CHARITY LEDGER SYSTEM - MVP DATABASE
 
-class users {
-  
+class Users {
+  - id : Long
+  - username : String
+  - role : String
+  - organization_name : String
+  - private_key : String
+  - password_hash : String
 }
 
+class Records {
+  - id : Long
+  - school_id : Long
+  - local_auth_id : Long
+  - goal_limit : Double
+  - bank_account_number : String
+  - school_signature : String
+  - local_auth_signature : String
+  - situation : String
+  - record_rejected_reason : String
+  - status : String {DRAFT | PENDING_APPROVAL 
+    | RECEIVING | WAITING_FOR_REPORT | CLOSED}
+  - report_image : Image
+  - report_status : String{PENDING_REQUEST | REJECTED 
+    | ACCEPTED}
+  - report_rejected_reason : String
+  - child_name : String
+  - child_image : Image
+  - created_by : Long
+  - created_at : String
+}
 
+class Donations {
+    - id : Long
+    - record_id : Long
+    - amount : Double
+    - transaction_id : Long
+    - transaction_hash : String
+    - created_at : DateTime
+}
+
+Users "1" -- "0..*" Records
+Records "1" -- "0..*" Donations
 
 @enduml

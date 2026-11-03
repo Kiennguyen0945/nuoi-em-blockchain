@@ -13,21 +13,82 @@ enum UserRole {
   LOCAL_AUTH
 }
 
+enum RecordStatus {
+  DRAFT
+  PENDING_APPROVAL
+  RECEIVING
+  WAITING_FOR_REPORT
+  CLOSED
+}
+
+enum ReportStatus {
+  PENDING_REQUEST
+  REJECTED
+  ACCEPTED
+}
+
 model User {
-  id               String     @id @default(uuid())
-  email            String     @unique
-  passwordHash     String     @map("password_hash")
-  fullName         String     @map("full_name")
+  id               String      @id @default(uuid())
+  username         String?     @unique
+  email            String?     @unique
+  passwordHash     String      @map("password_hash")
+  fullName         String      @map("full_name")
   role             UserRole
-  organizationName String?    @map("organization_name")
-  organizationCode String?    @map("organization_code")
-  isActive         Boolean    @default(true) @map("is_active")
-  createdAt        DateTime   @default(now()) @map("created_at")
-  updatedAt        DateTime   @updatedAt @map("updated_at")
+  organizationName String?     @map("organization_name")
+  organizationCode String?     @map("organization_code")
+  privateKey       String?     @map("private_key")
+  isActive         Boolean     @default(true) @map("is_active")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
 
   auditLogs        AuditLog[]
+  createdRecords   Record[]    @relation("CreatedRecords")
+  schoolRecords    Record[]    @relation("SchoolRecords")
+  localAuthRecords Record[]    @relation("LocalAuthRecords")
 
   @@map("users")
+}
+
+model Record {
+  id                   String        @id @default(uuid())
+  schoolId             String?       @map("school_id")
+  localAuthId          String?       @map("local_auth_id")
+  createdBy            String?       @map("created_by")
+  goalLimit            Decimal       @default(0) @map("goal_limit") @db.Decimal(18, 2)
+  bankAccountNumber    String?       @map("bank_account_number")
+  schoolSignature      String?       @map("school_signature")
+  localAuthSignature   String?       @map("local_auth_signature")
+  situation            String?       @db.Text
+  recordRejectedReason String?       @map("record_rejected_reason") @db.Text
+  status               RecordStatus  @default(DRAFT)
+  reportImage          String?       @map("report_image")
+  reportStatus         ReportStatus? @map("report_status")
+  reportRejectedReason String?       @map("report_rejected_reason") @db.Text
+  childName            String?       @map("child_name")
+  childImage           String?       @map("child_image")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  school               User?         @relation("SchoolRecords", fields: [schoolId], references: [id])
+  localAuth            User?         @relation("LocalAuthRecords", fields: [localAuthId], references: [id])
+  creator              User?         @relation("CreatedRecords", fields: [createdBy], references: [id])
+  donations            Donation[]
+
+  @@map("records")
+}
+
+model Donation {
+  id              String   @id @default(uuid())
+  recordId        String   @map("record_id")
+  amount          Decimal  @map("amount") @db.Decimal(18, 2)
+  transactionId   String   @unique @map("transaction_id")
+  transactionHash String?  @map("transaction_hash")
+  referenceCode   String?  @map("reference_code")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  record          Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@map("donations")
 }
 
 model AuditLog {
