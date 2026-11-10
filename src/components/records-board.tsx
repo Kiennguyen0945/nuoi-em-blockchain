@@ -1,6 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPen,
+  faTrashCan,
+  faPaperPlane,
+  faPenNib,
+  faBan,
+  faLock,
+  faPlus,
+} from "@fortawesome/free-solid-svg-icons";
 
 type Org = {
   id: string;
@@ -202,9 +212,9 @@ export default function RecordsBoard({ role }: { role: Role }) {
         {role === "ADMIN" && (
           <button
             onClick={openCreate}
-            className="bg-teal-700 hover:bg-teal-800 text-white text-sm rounded-lg px-3 py-1.5 font-semibold"
+            className="inline-flex items-center gap-1.5 bg-teal-700 hover:bg-teal-800 text-white text-sm rounded-lg px-3 py-1.5 font-semibold"
           >
-            + Thêm hồ sơ
+            <FontAwesomeIcon icon={faPlus} /> Thêm hồ sơ
           </button>
         )}
       </div>
@@ -229,7 +239,7 @@ export default function RecordsBoard({ role }: { role: Role }) {
               {records.map((r) => (
                 <tr key={r.id} className="border-b border-slate-100 align-top">
                   <td className="py-2 font-mono text-xs">{r.id.slice(0, 8)}</td>
-                  <td>{r.childName ?? <span className="italic text-slate-400">🔒 L2 ẩn</span>}</td>
+                  <td>{r.childName ?? <span className="italic text-slate-400 inline-flex items-center gap-1"><FontAwesomeIcon icon={faLock} /> L2 ẩn</span>}</td>
                   <td className="max-w-[220px] text-slate-600">
                     {r.situation ?? "—"}
                     {r.recordRejectedReason && (
@@ -250,14 +260,14 @@ export default function RecordsBoard({ role }: { role: Role }) {
                   <td className="whitespace-nowrap">
                     {role === "ADMIN" ? (
                       <div className="flex gap-1">
-                        <button title="Sửa (DRAFT)" disabled={r.status !== "DRAFT"} onClick={() => openEdit(r)} className="border rounded px-2 py-1 disabled:opacity-40">✏️</button>
-                        <button title="Gửi duyệt" disabled={r.status !== "DRAFT"} onClick={() => submitForApproval(r)} className="border rounded px-2 py-1 disabled:opacity-40">📤</button>
-                        <button title="Xóa" onClick={() => remove(r)} className="border border-red-200 text-red-600 rounded px-2 py-1">🗑️</button>
+                        <button title="Sửa (DRAFT)" disabled={r.status !== "DRAFT"} onClick={() => openEdit(r)} className="border rounded px-2 py-1 disabled:opacity-40"><FontAwesomeIcon icon={faPen} /></button>
+                        <button title="Gửi duyệt" disabled={r.status !== "DRAFT"} onClick={() => submitForApproval(r)} className="border rounded px-2 py-1 disabled:opacity-40"><FontAwesomeIcon icon={faPaperPlane} /></button>
+                        <button title="Xóa" onClick={() => remove(r)} className="border border-red-200 text-red-600 rounded px-2 py-1"><FontAwesomeIcon icon={faTrashCan} /></button>
                       </div>
                     ) : (
                       <div className="flex gap-1">
-                        <button title="Ký" disabled={!minePending(r)} onClick={() => sign(r)} className="border border-emerald-200 text-emerald-700 rounded px-2 py-1 text-xs font-semibold disabled:opacity-40">✍️ Ký</button>
-                        <button title="Từ chối" disabled={r.status !== "PENDING_APPROVAL"} onClick={() => reject(r)} className="border border-red-200 text-red-600 rounded px-2 py-1 text-xs font-semibold disabled:opacity-40">🚫 Từ chối</button>
+                        <button title="Ký" disabled={!minePending(r)} onClick={() => sign(r)} className="border border-emerald-200 text-emerald-700 rounded px-2 py-1 text-xs font-semibold disabled:opacity-40 inline-flex items-center gap-1"><FontAwesomeIcon icon={faPenNib} /> Ký</button>
+                        <button title="Từ chối" disabled={r.status !== "PENDING_APPROVAL"} onClick={() => reject(r)} className="border border-red-200 text-red-600 rounded px-2 py-1 text-xs font-semibold disabled:opacity-40 inline-flex items-center gap-1"><FontAwesomeIcon icon={faBan} /> Từ chối</button>
                       </div>
                     )}
                   </td>
