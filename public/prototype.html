@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NuôiEm - Prototype 3 Actor (Admin / School / LocalAuth)</title>
+<!--
+  PROTOTYPE MẪU - CHỈ ĐỂ TEAM TEST
+  - Một file html/css tự chứa (không cần cài gì, mở trực tiếp bằng trình duyệt cũng được)
+  - Hoặc chạy `npm run dev` rồi vào http://localhost:3000/prototype.html
+  - Phân quyền mô phỏng đúng quy tắc ở src/lib/permissions.ts:
+      Admin: thấy L2 khi DRAFT, ẩn từ PENDING_APPROVAL trở lên
+      School: chỉ thấy trẻ của trường mình
+      LocalAuth: chỉ thấy trẻ của xã mình
+  - Dữ liệu lưu trong localStorage (nút "Khôi phục mẫu" để reset)
+  - Production thật sẽ dùng API + NextAuth (xem src/app/api/records, src/lib/permissions.ts)
+-->
+<style>
+  :root {
+    --green: #0f766e;
+    --green-dark: #115e59;
+    --green-light: #ccfbf1;
+    --amber: #b45309;
+    --amber-light: #fef3c7;
+    --blue: #1d4ed8;
+    --blue-light: #dbeafe;
+    --red: #b91c1c;
+    --red-light: #fee2e2;
+    --gray: #475569;
+    --gray-light: #f1f5f9;
+    --border: #e2e8f0;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  body { margin: 0; background: var(--gray-light); color: #1e293b; }
+
+  /* ===== Layout ===== */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 250px; background: var(--green-dark); color: #fff; padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 8px; position: sticky; top: 0; height: 100vh; overflow: auto;
+  }
+  .sidebar .logo { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .sidebar .sub { font-size: 12px; color: #99f6e4; margin-bottom: 16px; }
+  .nav-btn {
+    background: transparent; border: none; color: #d1fae5; text-align: left;
+    padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,.08); }
+  .nav-btn.active { background: var(--green); color: #fff; font-weight: 600; }
+
+  .main { flex: 1; padding: 20px 24px; overflow: auto; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 16px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .topbar h1 { font-size: 16px; margin: 0; color: var(--green-dark); }
+  .role-switcher { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+  .role-switcher select {
+    padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
+  }
+
+  /* ===== Cards ===== */
+  .cards { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .card {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; min-width: 150px; flex: 1;
+  }
+  .card .num { font-size: 26px; font-weight: 800; color: var(--green-dark); }
+  .card .lbl { font-size: 12px; color: var(--gray); }
+
+  /* ===== Table ===== */
+  .panel { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .panel h2 { margin: 0 0 12px; font-size: 15px; color: var(--green-dark); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { background: var(--gray-light); font-size: 12px; color: var(--gray); text-transform: uppercase; }
+
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .st-DRAFT { background: var(--gray-light); color: var(--gray); }
+  .st-PENDING_APPROVAL { background: var(--amber-light); color: var(--amber); }
+  .st-RECEIVING { background: var(--blue-light); color: var(--blue); }
+  .st-WAITING_FOR_REPORT { background: #ede9fe; color: #6d28d9; }
+  .st-CLOSED { background: var(--green-light); color: var(--green-dark); }
+
+  /* ===== Buttons ===== */
+  .btn {
+    border: none; border-radius: 8px; padding: 7px 12px; font-size: 12px; cursor: pointer; font-weight: 600;
+  }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-outline { background: #fff; border: 1px solid var(--border); color: #334155; }
+  .btn-outline:hover { background: var(--gray-light); }
+  .btn-amber { background: var(--amber); color: #fff; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .icon-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 13px; }
+
+  /* ===== Forms (modal) ===== */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, .45);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; width: 460px; max-width: 94vw; padding: 20px;
+    max-height: 90vh; overflow: auto; box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  }
+  .modal h3 { margin: 0 0 12px; color: var(--green-dark); }
+  .field { margin-bottom: 10px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--gray); display: block; margin-bottom: 4px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
+  }
+  .field textarea { min-height: 56px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+  .tag { font-size: 11px; background: var(--green-light); color: var(--green-dark); border-radius: 6px; padding: 2px 6px; }
+  .l2-hidden { color: #94a3b8; font-style: italic; }
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; background: #0f172a; color: #fff;
+    padding: 10px 16px; border-radius: 10px; font-size: 13px; z-index: 100; display: none; max-width: 320px;
+  }
+  .note { background: var(--amber-light); border: 1px solid #fcd34d; color: #92400e; padding: 8px 10px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; }
+  .small { font-size: 12px; color: var(--gray); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="logo">🌾 NuôiEm</div>
+    <div class="sub">Charity Ledger · Prototype đội nhóm</div>
+    <button class="nav-btn active" data-view="dashboard">📊 Tổng quan</button>
+    <button class="nav-btn" data-view="records">📁 Hồ sơ</button>
+    <button class="nav-btn" data-view="rules">🔐 Quy tắc quyền</button>
+    <div style="margin-top:auto; font-size:11px; color:#5eead4">
+      Dữ liệu local (localStorage).<br/>Demo phân quyền = giống <code>src/lib/permissions.ts</code>
+    </div>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <main class="main">
+    <!-- Topbar + role switcher -->
+    <div class="topbar">
+      <h1>Giao diện cơ bản cho 3 Actor</h1>
+      <div class="role-switcher">
+        <label for="currentUser"><b>Đăng nhập giả:</b></label>
+        <select id="currentUser"></select>
+        <button class="btn btn-outline" id="resetSeed" title="Khôi phục dữ liệu mẫu">↺ Khôi phục mẫu</button>
+      </div>
+    </div>
+
+    <!-- ===== View: dashboard ===== -->
+    <section id="view-dashboard" class="view">
+      <div class="cards" id="statCards"></div>
+      <div class="panel">
+        <h2>Hồ sơ của bạn (theo quyền)</h2>
+        <div id="dashboardList"></div>
+      </div>
+    </section>
+
+    <!-- ===== View: records ===== -->
+    <section id="view-records" class="view" style="display:none">
+      <div class="panel">
+        <h2>
+          <span>📁 Danh sách hồ sơ</span>
+          <span id="adminAddBtnWrap" style="display:none"><button class="btn btn-primary" id="btnAddRecord">+ Thêm hồ sơ</button></span>
+        </h2>
+        <div class="note" id="l2Note">L2 (tên trẻ, ảnh) chỉ hiển thị khi bạn có quyền. Admin chỉ xem L2 khi hồ sơ ở trạng thái <b>DRAFT</b>.</div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>Mã</th><th>Trẻ (L2)</th><th>Hoàn cảnh</th><th>Mục tiêu</th><th>Trạng thái</th><th>Đơn vị</th><th>Hành động</th></tr>
+            </thead>
+            <tbody id="recordsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== View: rules ===== -->
+    <section id="view-rules" class="view" style="display:none">
+      <div class="panel">
+        <h2>🔐 Quy tắc phân quyền (nghiệm thu Task [FEAT])</h2>
+        <table>
+          <thead><tr><th>Actor</th><th>Xem hồ sơ</th><th>Xem/sửa L2</th><th>Việc chính</th></tr></thead>
+          <tbody>
+            <tr><td><b>ADMIN</b></td><td>Toàn bộ (L1)</td><td>Chỉ khi <span class="badge st-DRAFT">DRAFT</span> — từ <span class="badge st-PENDING_APPROVAL">PENDING_APPROVAL</span> trở đi không xem L2</td><td>Nhập hồ sơ, gửi duyệt</td></tr>
+            <tr><td><b>SCHOOL</b></td><td>Chỉ trẻ trường mình</td><td>Xem L2 trẻ trường mình (mọi trạng thái)</td><td>Ký / từ chối hồ sơ, nhận tiền</td></tr>
+            <tr><td><b>LOCAL_AUTH</b></td><td>Chỉ trẻ xã/khu vực mình</td><td>Xem L2 trẻ khu vực mình</td><td>Ký / từ chối, duyệt báo cáo, đóng hồ sơ</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Mạnh thường quân không đăng nhập: quét QR VietQR → chuyển tiền; tra cứu bằng <code>transactionId</code> (không hiển thị L2).</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ===== Modal: Thêm / Sửa hồ sơ ===== -->
+<div class="modal-backdrop" id="recordModal">
+  <div class="modal">
+    <h3 id="recordModalTitle">Thêm hồ sơ</h3>
+    <form id="recordForm">
+      <input type="hidden" id="fRecordId" />
+      <div class="field"><label>Tên trẻ (L2) *</label><input id="fChildName" required placeholder="Nguyễn Văn Bé" /></div>
+      <div class="field"><label>Hoàn cảnh (L1)</label><textarea id="fSituation" placeholder="Mồ côi mẹ, cha làm thuê..."></textarea></div>
+      <div class="field"><label>Mục tiêu (VNĐ) *</label><input id="fGoalLimit" type="number" min="0" required placeholder="10000000" /></div>
+      <div class="field"><label>Số tài khoản trường</label><input id="fBank" placeholder="9704220000000001" /></div>
+      <div class="field"><label>Thuộc trường</label><select id="fSchoolCode"></select></div>
+      <div class="field"><label>Thuộc UBND xã</label><select id="fLaCode"></select></div>
+      <div class="field"><label>Trạng thái</label><select id="fStatus"><option>DRAFT</option><option>PENDING_APPROVAL</option></select></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cancelModal">Hủy</button>
+        <button type="submit" class="btn btn-primary">Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+/* ================= SEED (giống docs/reports task 2) ================= */
+const SEED_RECORDS = [
+  { id: "rec-1", childName: "Bé Minh An", situation: "Hoàn cảnh khó khăn: mồ côi mẹ, cha làm thuê, Xã A", goalLimit: 10000000, bankAccount: "9704220000000001", schoolCode: "THAXA01", schoolName: "Trường TH Xã A", laCode: "UBXAA01", laName: "UBND Xã A", status: "DRAFT", schoolSigned: false, laSigned: false, createdAt: "2026-11-10" },
+  { id: "rec-2", childName: "Bé Gia Huy", situation: "Cả cha mẹ đi vắng, ở với bà (Xã B)", goalLimit: 8000000, bankAccount: "9704220000000002", schoolCode: "THBXA02", schoolName: "Trường TH Xã B", laCode: "UBXAB02", laName: "UBND Xã B", status: "PENDING_APPROVAL", schoolSigned: true, laSigned: false, createdAt: "2026-11-09" },
+];
+const USERS = [
+  { id: "admin", role: "ADMIN", orgCode: "ADMIN", name: "Quản trị viên (Admin)" },
+  { id: "truong1", role: "SCHOOL", orgCode: "THAXA01", name: "Cô Lan - Trường TH Xã A (truong1@nuoi-em.vn)" },
+  { id: "truong2", role: "SCHOOL", orgCode: "THBXA02", name: "Cô Hạnh - Trường TH Xã B (truong2@nuoi-em.vn)" },
+  { id: "localauth1", role: "LOCAL_AUTH", orgCode: "UBXAA01", name: "UBND Xã A (localauth_xa@nuoi-em.vn)" },
+  { id: "localauth2", role: "LOCAL_AUTH", orgCode: "UBXAB02", name: "UBND Xã B (localauth_xb@nuoi-em.vn)" },
+];
+const STORE_KEY = "nuoi-em-prototype-v1";
+
+let currentUser = USERS[0];
+let records = [];
+
+/* ================= Helpers ================= */
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("vi-VN") + " đ";
+const toast = (msg) => {
+  const t = $("#toast"); t.textContent = msg; t.style.display = "block";
+  setTimeout(() => (t.style.display = "none"), 2600);
+};
+
+/* ======= Quy tắc phân quyền (giống src/lib/permissions.ts) ======= */
+function canAccess(user, r) {
+  if (user.role === "ADMIN") return true;
+  if (user.role === "SCHOOL") return r.schoolCode === user.orgCode;
+  if (user.role === "LOCAL_AUTH") return r.laCode === user.orgCode;
+  return false;
+}
+function canViewL2(user, r) {
+  if (!canAccess(user, r)) return false;
+  if (user.role === "ADMIN") return r.status === "DRAFT";
+  return true;
+}
+function visibleRecords(user) {
+  return records.filter((r) => canAccess(user, r));
+}
+
+/* ================= Persistence ================= */
+function load() {
+  try { records = JSON.parse(localStorage.getItem(STORE_KEY)) || JSON.parse(JSON.stringify(SEED_RECORDS)); }
+  catch { records = JSON.parse(JSON.stringify(SEED_RECORDS)); }
+}
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(records)); }
+
+/* ================= Render ================= */
+function renderUserSwitcher() {
+  $("#currentUser").innerHTML = USERS.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join("");
+  $("#currentUser").value = currentUser.id;
+}
+function statusBadge(s) { return `<span class="badge st-${s}">${s}</span>`; }
+function l2Cell(r, user) {
+  return canViewL2(user, r) ? esc(r.childName) : `<span class="l2-hidden">🔒 L2 ẩn</span>`;
+}
+function actionButtons(r, user) {
+  const btns = [];
+  if (user.role === "ADMIN") {
+    const dim = r.status !== "DRAFT";
+    btns.push(`<button class="icon-btn" title="Sửa (chỉ DRAFT)" data-act="edit" data-id="${r.id}" ${dim ? "disabled" : ""}>✏️</button>`);
+    btns.push(`<button class="icon-btn" title="Gửi duyệt" data-act="submit" data-id="${r.id}" ${r.status === "DRAFT" ? "" : "disabled"}>📤</button>`);
+    btns.push(`<button class="icon-btn" title="Xóa" data-act="delete" data-id="${r.id}">🗑️</button>`);
+  } else {
+    const isMine = user.role === "SCHOOL" ? r.schoolCode === user.orgCode : r.laCode === user.orgCode;
+    const canSign = r.status === "PENDING_APPROVAL" && isMine &&
+      (user.role === "SCHOOL" ? !r.schoolSigned : !r.laSigned);
+    btns.push(`<button class="icon-btn btn-green" title="Ký" data-act="sign" data-id="${r.id}" ${canSign ? "" : "disabled"}>✍️ Ký</button>`);
+    btns.push(`<button class="icon-btn btn-red" title="Từ chối" data-act="reject" data-id="${r.id}" ${r.status === "PENDING_APPROVAL" && isMine ? "" : "disabled"}>🚫 Từ chối</button>`);
+  }
+  return btns.join(" ");
+}
+function renderTable(listEl, user, compact=false) {
+  const list = visibleRecords(user);
+  if (!list.length) {
+    $(listEl).innerHTML = `<p class="small">Không có hồ sơ nào thuộc phạm vi của bạn.</p>`;
+    return;
+  }
+  const rows = list.map(r => `
+    <tr>
+      <td><b>${esc(r.id)}</b></td>
+      <td>${l2Cell(r, user)}</td>
+      <td style="max-width:240px">${esc(r.situation)}</td>
+      <td>${fmt(r.goalLimit)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${esc(r.schoolName)}<br/><span class="small">${esc(r.laName)}</span></td>
+      <td>${actionButtons(r, user)}</td>
+    </tr>`).join("");
+  $(listEl).innerHTML = `<div style="overflow-x:auto"><table><thead>
+    <tr><th>Mã</th><th>Trẻ (L2)</th><th>Hoàn cảnh</th><th>Mục tiêu</th><th>Trạng thái</th><th>Đơn vị</th><th>Hành động</th></tr>
+  </thead><tbody>${rows}</tbody></table></div>`;
+}
+function renderStats(user) {
+  const list = visibleRecords(user);
+  const count = (s) => list.filter(r => r.status === s).length;
+  $("#statCards").innerHTML = `
+    <div class="card"><div class="num">${list.length}</div><div class="lbl">Hồ sơ thuộc phạm vi</div></div>
+    <div class="card"><div class="num">${count("DRAFT")}</div><div class="lbl">DRAFT</div></div>
+    <div class="card"><div class="num">${count("PENDING_APPROVAL")}</div><div class="lbl">Chờ ký</div></div>
+    <div class="card"><div class="num">${count("RECEIVING")}</div><div class="lbl">Đang nhận</div></div>
+    <div class="card"><div class="num">${count("CLOSED")}</div><div class="lbl">Đã đóng</div></div>`;
+}
+function render() {
+  renderUserSwitcher();
+  $("#adminAddBtnWrap").style.display = currentUser.role === "ADMIN" ? "inline-block" : "none";
+  renderStats(currentUser);
+  renderTable("#recordsTbody", currentUser);
+  renderTable("#dashboardList", currentUser, true);
+}
+
+/* ================= Actions ================= */
+function openModal(rec) {
+  $("#recordModalTitle").textContent = rec ? "Sửa hồ sơ" : "Thêm hồ sơ";
+  $("#fRecordId").value = rec?.id ?? "";
+  $("#fChildName").value = rec?.childName ?? "";
+  $("#fSituation").value = rec?.situation ?? "";
+  $("#fGoalLimit").value = rec?.goalLimit ?? "";
+  $("#fBank").value = rec?.bankAccount ?? "";
+  const schools = [...new Set(records.map(r => r.schoolCode))].map(code => {
+    const r = records.find(x => x.schoolCode === code); return { code, name: r?.schoolName };
+  });
+  const la = [...new Set(records.map(r => r.laCode))].map(code => {
+    const r = records.find(x => x.laCode === code); return { code, name: r?.laName };
+  });
+  $("#fSchoolCode").innerHTML = schools.map(s => `<option value="${s.code}" ${rec?.schoolCode===s.code?"selected":""}>${esc(s.name)}</option>`).join("");
+  $("#fLaCode").innerHTML = la.map(s => `<option value="${s.code}" ${rec?.laCode===s.code?"selected":""}>${esc(s.name)}</option>`).join("");
+  $("#fStatus").value = rec?.status ?? "DRAFT";
+  $("#recordModal").classList.add("open");
+}
+function closeModal() { $("#recordModal").classList.remove("open"); }
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-act]");
+  if (btn) {
+    const id = btn.dataset.id, act = btn.dataset.act;
+    const i = records.findIndex(r => r.id === id);
+    const r = records[i];
+    if (act === "edit") { if (r.status === "DRAFT") openModal(r); }
+    else if (act === "delete") {
+      if (confirm("Xóa hồ sơ " + r.id + "?")) { records.splice(i, 1); save(); render(); toast("Đã xóa hồ sơ"); }
+    } else if (act === "submit") {
+      r.status = "PENDING_APPROVAL"; save(); render(); toast("Đã gửi duyệt");
+    } else if (act === "sign") {
+      if (currentUser.role === "SCHOOL") r.schoolSigned = true; else r.laSigned = true;
+      if (r.schoolSigned && r.laSigned) r.status = "RECEIVING";
+      save(); render(); toast(r.status === "RECEIVING" ? "Đã ký đủ → RECEIVING" : "Đã ký");
+    } else if (act === "reject") {
+      const reason = prompt("Lý do từ chối (ghi để đối soát):", "");
+      if (reason !== null) { r.status = "DRAFT"; r.schoolSigned = false; r.laSigned = false; save(); render(); toast("Đã từ chối, hồ sơ quay về DRAFT"); }
+    }
+    return;
+  }
+  if (e.target.id === "cancelModal") closeModal();
+});
+
+$("#recordForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const id = $("#fRecordId").value;
+  const data = {
+    childName: $("#fChildName").value.trim(),
+    situation: $("#fSituation").value.trim(),
+    goalLimit: Number($("#fGoalLimit").value || 0),
+    bankAccount: $("#fBank").value.trim(),
+    schoolCode: $("#fSchoolCode").value,
+    laCode: $("#fLaCode").value,
+    status: $("#fStatus").value,
+  };
+  const r0 = records.find(r => r.schoolCode === data.schoolCode);
+  const la0 = records.find(r => r.laCode === data.laCode);
+  data.schoolName = r0 ? r0.schoolName : data.schoolCode;
+  data.laName = la0 ? la0.laName : data.laCode;
+  if (id) {
+    const i = records.findIndex(r => r.id === id);
+    records[i] = { ...records[i], ...data };
+    toast("Đã cập nhật hồ sơ");
+  } else {
+    const nid = "rec-" + Date.now().toString(36);
+    records.unshift({ id: nid, ...data, schoolSigned: false, laSigned: false, createdAt: new Date().toISOString().slice(0,10) });
+    toast("Đã thêm hồ sơ " + nid);
+  }
+  save(); closeModal(); render();
+});
+
+/* Nav + switcher + reset */
+$$(".nav-btn").forEach(b => b.addEventListener("click", () => {
+  $$(".nav-btn").forEach(x => x.classList.toggle("active", x === b));
+  $$(".view").forEach(v => v.style.display = "none");
+  document.getElementById("view-" + b.dataset.view).style.display = "block";
+}));
+$("#currentUser").addEventListener("change", (e) => { currentUser = USERS.find(u => u.id === e.target.value) || USERS[0]; render(); toast("Chế độ: " + currentUser.name); });
+$("#resetSeed").addEventListener("click", () => { localStorage.removeItem(STORE_KEY); load(); render(); toast("Đã khôi phục dữ liệu mẫu"); });
+$("#btnAddRecord").addEventListener("click", () => openModal(null));
+
+/* Init */
+load();
+renderUserSwitcher();
+render();
+</script>
+</body>
+</html>
