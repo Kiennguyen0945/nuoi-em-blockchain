@@ -76,6 +76,8 @@ Kịch bản test gợi ý cho nhóm:
 - **Ký hồ sơ bằng private key thật** (task [FEAT] Ký hồ sơ) — prototype mới mô phỏng cờ ký.
 - **VietQR/webhook + donation flow UI** — task [FEAT] VietQR.
 
+- Đã thay toàn bộ emoji bằng **Font Awesome 6** (CDN `cdnjs.cloudflare.com/.../css/all.min.css`): menu (chart-pie/folder-open/lock), nút Khôi phục (rotate-left), hành động (pen/paper-plane/trash/pen-nib/ban), khóa L2 (lock), logo (wheat-awn).
+
 ## 7. File đã thêm/sửa
 
 - `public/prototype.html` (mới, ~600 dòng, tự chứa)

@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NuôiEm - Prototype 3 Actor (Admin / School / LocalAuth)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
 <!--
   PROTOTYPE MẪU - CHỈ ĐỂ TEAM TEST
   - Một file html/css tự chứa (không cần cài gì, mở trực tiếp bằng trình duyệt cũng được)
@@ -131,11 +132,11 @@
 <div class="layout">
   <!-- ===== Sidebar ===== -->
   <aside class="sidebar">
-    <div class="logo">🌾 NuôiEm</div>
+    <div class="logo"><i class="fa-solid fa-wheat-awn"></i> NuôiEm</div>
     <div class="sub">Charity Ledger · Prototype đội nhóm</div>
-    <button class="nav-btn active" data-view="dashboard">📊 Tổng quan</button>
-    <button class="nav-btn" data-view="records">📁 Hồ sơ</button>
-    <button class="nav-btn" data-view="rules">🔐 Quy tắc quyền</button>
+    <button class="nav-btn active" data-view="dashboard"><i class="fa-solid fa-chart-pie"></i> Tổng quan</button>
+    <button class="nav-btn" data-view="records"><i class="fa-solid fa-folder-open"></i> Hồ sơ</button>
+    <button class="nav-btn" data-view="rules"><i class="fa-solid fa-lock"></i> Quy tắc quyền</button>
     <div style="margin-top:auto; font-size:11px; color:#5eead4">
       Dữ liệu local (localStorage).<br/>Demo phân quyền = giống <code>src/lib/permissions.ts</code>
     </div>
@@ -149,7 +150,7 @@
       <div class="role-switcher">
         <label for="currentUser"><b>Đăng nhập giả:</b></label>
         <select id="currentUser"></select>
-        <button class="btn btn-outline" id="resetSeed" title="Khôi phục dữ liệu mẫu">↺ Khôi phục mẫu</button>
+        <button class="btn btn-outline" id="resetSeed" title="Khôi phục dữ liệu mẫu"><i class="fa-solid fa-rotate-left"></i> Khôi phục mẫu</button>
       </div>
     </div>
 
@@ -166,7 +167,7 @@
     <section id="view-records" class="view" style="display:none">
       <div class="panel">
         <h2>
-          <span>📁 Danh sách hồ sơ</span>
+          <span><i class="fa-solid fa-folder-open"></i> Danh sách hồ sơ</span>
           <span id="adminAddBtnWrap" style="display:none"><button class="btn btn-primary" id="btnAddRecord">+ Thêm hồ sơ</button></span>
         </h2>
         <div class="note" id="l2Note">L2 (tên trẻ, ảnh) chỉ hiển thị khi bạn có quyền. Admin chỉ xem L2 khi hồ sơ ở trạng thái <b>DRAFT</b>.</div>
@@ -184,7 +185,7 @@
     <!-- ===== View: rules ===== -->
     <section id="view-rules" class="view" style="display:none">
       <div class="panel">
-        <h2>🔐 Quy tắc phân quyền (nghiệm thu Task [FEAT])</h2>
+        <h2><i class="fa-solid fa-lock"></i> Quy tắc phân quyền (nghiệm thu Task [FEAT])</h2>
         <table>
           <thead><tr><th>Actor</th><th>Xem hồ sơ</th><th>Xem/sửa L2</th><th>Việc chính</th></tr></thead>
           <tbody>
@@ -279,21 +280,21 @@ function renderUserSwitcher() {
 }
 function statusBadge(s) { return `<span class="badge st-${s}">${s}</span>`; }
 function l2Cell(r, user) {
-  return canViewL2(user, r) ? esc(r.childName) : `<span class="l2-hidden">🔒 L2 ẩn</span>`;
+  return canViewL2(user, r) ? esc(r.childName) : `<span class="l2-hidden"><i class="fa-solid fa-lock"></i> L2 ẩn</span>`;
 }
 function actionButtons(r, user) {
   const btns = [];
   if (user.role === "ADMIN") {
     const dim = r.status !== "DRAFT";
-    btns.push(`<button class="icon-btn" title="Sửa (chỉ DRAFT)" data-act="edit" data-id="${r.id}" ${dim ? "disabled" : ""}>✏️</button>`);
-    btns.push(`<button class="icon-btn" title="Gửi duyệt" data-act="submit" data-id="${r.id}" ${r.status === "DRAFT" ? "" : "disabled"}>📤</button>`);
-    btns.push(`<button class="icon-btn" title="Xóa" data-act="delete" data-id="${r.id}">🗑️</button>`);
+    btns.push(`<button class="icon-btn" title="Sửa (chỉ DRAFT)" data-act="edit" data-id="${r.id}" ${dim ? "disabled" : ""}><i class="fa-solid fa-pen"></i></button>`);
+    btns.push(`<button class="icon-btn" title="Gửi duyệt" data-act="submit" data-id="${r.id}" ${r.status === "DRAFT" ? "" : "disabled"}><i class="fa-solid fa-paper-plane"></i></button>`);
+    btns.push(`<button class="icon-btn" title="Xóa" data-act="delete" data-id="${r.id}"><i class="fa-solid fa-trash"></i></button>`);
   } else {
     const isMine = user.role === "SCHOOL" ? r.schoolCode === user.orgCode : r.laCode === user.orgCode;
     const canSign = r.status === "PENDING_APPROVAL" && isMine &&
       (user.role === "SCHOOL" ? !r.schoolSigned : !r.laSigned);
-    btns.push(`<button class="icon-btn btn-green" title="Ký" data-act="sign" data-id="${r.id}" ${canSign ? "" : "disabled"}>✍️ Ký</button>`);
-    btns.push(`<button class="icon-btn btn-red" title="Từ chối" data-act="reject" data-id="${r.id}" ${r.status === "PENDING_APPROVAL" && isMine ? "" : "disabled"}>🚫 Từ chối</button>`);
+    btns.push(`<button class="icon-btn btn-green" title="Ký" data-act="sign" data-id="${r.id}" ${canSign ? "" : "disabled"}><i class="fa-solid fa-pen-nib"></i> Ký</button>`);
+    btns.push(`<button class="icon-btn btn-red" title="Từ chối" data-act="reject" data-id="${r.id}" ${r.status === "PENDING_APPROVAL" && isMine ? "" : "disabled"}><i class="fa-solid fa-ban"></i> Từ chối</button>`);
   }
   return btns.join(" ");
 }
