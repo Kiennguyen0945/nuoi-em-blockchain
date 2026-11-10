@@ -10,6 +10,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
     "compile": "hardhat compile",
     "test": "npm run test:unit && npm run test:contracts",
     "test:unit": "tsx --env-file-if-exists=.env --test \"test/unit/**/*.test.ts\"",
