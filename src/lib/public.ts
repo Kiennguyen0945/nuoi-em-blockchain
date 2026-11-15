@@ -15,70 +15,90 @@ export async function sumDonationsForRecord(recordIds: string[]) {
 }
 
 export async function getPublicHomeStats() {
-  const [totalRecords, receiving, totalDonations, confirmedSum] =
-    await Promise.all([
-      prisma.record.count(),
-      prisma.record.count({ where: { status: "RECEIVING" } }),
-      prisma.donation.count(),
-      prisma.donation.aggregate({ _sum: { amount: true } }),
-    ]);
+  try {
+    const [totalRecords, receiving, totalDonations, confirmedSum] =
+      await Promise.all([
+        prisma.record.count(),
+        prisma.record.count({ where: { status: "RECEIVING" } }),
+        prisma.donation.count(),
+        prisma.donation.aggregate({ _sum: { amount: true } }),
+      ]);
 
-  return {
-    totalRecords,
-    receiving,
-    totalDonations,
-    totalConfirmed: Number(confirmedSum._sum.amount ?? 0),
-  };
+    return {
+      totalRecords,
+      receiving,
+      totalDonations,
+      totalConfirmed: Number(confirmedSum._sum.amount ?? 0),
+    };
+  } catch (e) {
+    console.error("DB unavailable for stats:", e);
+    return { totalRecords: 0, receiving: 0, totalDonations: 0, totalConfirmed: 0 };
+  }
 }
 
 export async function getPublicRecords() {
-  const records = await prisma.record.findMany({
-    where: { status: { in: ["RECEIVING", "WAITING_FOR_REPORT"] } },
-    orderBy: { createdAt: "desc" },
-    include: {
-      school: { select: { organizationName: true, organizationCode: true } },
-      localAuth: { select: { organizationName: true, organizationCode: true } },
-      _count: { select: { donations: true } },
-    },
-  });
-  const sums = await sumDonationsForRecord(records.map((r) => r.id));
-  return records.map((r) => ({
-    ...r,
-    raised: sums.get(r.id) ?? 0,
-  }));
+  try {
+    const records = await prisma.record.findMany({
+      where: { status: { in: ["RECEIVING", "WAITING_FOR_REPORT"] } },
+      orderBy: { createdAt: "desc" },
+      include: {
+        school: { select: { organizationName: true, organizationCode: true } },
+        localAuth: { select: { organizationName: true, organizationCode: true } },
+        _count: { select: { donations: true } },
+      },
+    });
+    const sums = await sumDonationsForRecord(records.map((r) => r.id));
+    return records.map((r) => ({
+      ...r,
+      raised: sums.get(r.id) ?? 0,
+    }));
+  } catch (e) {
+    console.error("DB unavailable for public records:", e);
+    return [];
+  }
 }
 
 export async function getPublicRecord(id: string) {
-  const record = await prisma.record.findUnique({
-    where: { id },
-    include: {
-      school: { select: { organizationName: true, organizationCode: true } },
-      localAuth: { select: { organizationName: true, organizationCode: true } },
-      donations: { orderBy: { createdAt: "desc" }, take: 50 },
-    },
-  });
-  if (!record) return null;
-  const raised = record.donations.reduce(
-    (acc, d) => acc + Number(d.amount),
-    0,
-  );
-  return { ...record, raised };
+  try {
+    const record = await prisma.record.findUnique({
+      where: { id },
+      include: {
+        school: { select: { organizationName: true, organizationCode: true } },
+        localAuth: { select: { organizationName: true, organizationCode: true } },
+        donations: { orderBy: { createdAt: "desc" }, take: 50 },
+      },
+    });
+    if (!record) return null;
+    const raised = record.donations.reduce(
+      (acc, d) => acc + Number(d.amount),
+      0,
+    );
+    return { ...record, raised };
+  } catch (e) {
+    console.error("DB unavailable for public record detail:", e);
+    return null;
+  }
 }
 
 /** Danh sách donation cho trang sao kê — KHÔNG kèm bất kỳ định danh người chuyển. */
 export async function getDonations(recordId: string) {
-  return prisma.donation.findMany({
-    where: { recordId },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    select: {
-      id: true,
-      amount: true,
-      transactionId: true,
-      createdAt: true,
-      transactionHash: true,
-    },
-  });
+  try {
+    return await prisma.donation.findMany({
+      where: { recordId },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        amount: true,
+        transactionId: true,
+        createdAt: true,
+        transactionHash: true,
+      },
+    });
+  } catch (e) {
+    console.error("DB unavailable for donations:", e);
+    return [];
+  }
 }
 
 export function formatVND(n: number | string | { toString(): string }) {
