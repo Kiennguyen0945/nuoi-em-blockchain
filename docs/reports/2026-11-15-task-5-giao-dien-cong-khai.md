@@ -49,17 +49,48 @@ Trang chủ `/`, `/ho-so` (nếu DB trống: hiển thị trạng thái đẹp "
 - `npm run build` — ✓ 18 routes (thêm: `/ho-so`, `/ho-so/[id]`, `/ho-so/[id]/quyen-gop`, `/tra-cuu`, `/huong-dan`, `/403`)
 - `npm run test` — không thay đổi logic nghiệp vụ (14 unit + 7 contract pass)
 
-## 6. Điểm còn lại / bàn giao
+## 6. Cập nhật lần 2 (2026-11-15) — Font Awesome + 21 hồ sơ demo + trang /ho-so có lọc
+
+Các mục bổ sung sau khi task hoàn thành lần đầu:
+
+1. **Thay toàn bộ emoji/SVG bằng Font Awesome 6** trên nhánh này (`src/app/*`, `public/prototype.html` không liên quan — nằm ở nhánh Task 1). Cherry-pick commit `792688b` (UI thật) vào nhánh này vì commit đó chưa vào `main`.
+2. **Fix lỗi icon phình to** — thêm `@fortawesome/fontawesome-svg-core/styles.css` vào `layout.tsx` (react-fontawesome không tự bó size nếu không nạp CSS).
+3. **Thêm favicon** `src/app/icon.svg` (icon SVG ngọn lúa/trái tim Nuôi Em).
+4. **Bỏ `tsconfig.tsbuildinfo` khỏi git** + thêm vào `.gitignore` (file cache build).
+5. **Loại `TEST.html`** (draft thiết kế của bạn) khỏi git — file vẫn giữ nguyên trên máy bạn; nếu nhóm muốn dùng phong cách đó thì lấy `TEST.html` làm tham chiếu.
+6. **Docker tự tắt sau khi máy khởi động lại** — đã khởi động lại `docker compose up -d`, postgres `healthy`.
+7. **Seed 21 hồ sơ demo = 7 em/trường × 3 trường** (`prisma/seed-demo.ts`, chạy bằng `npm run db:seed-demo`):
+   - 3 trường: `THAXA01` (Trường TH Xã A), `THBXA02` (Trường TH Xã B), `THCXA03` (Trường TH Xã C — mới tạo)
+   - 3 UBND: `UBXAA01` (Xã A), `UBXAB02` (Xã B), `UBXAC03` (Xã C — mới tạo, email `localauth_xc@nuoi-em.vn`)
+   - 3 trường School + 3 LocalAuth + 1 Admin, tất cả mật khẩu: `Password123!`
+   - **9 hồ sơ RECEIVING** (có 37 donations, tổng ~35,5 triệu VNĐ) — hiện ngay trên `/ho-so`
+   - 6 hồ sơ PENDING_APPROVAL, 6 hồ sơ DRAFT
+   - Hồ sơ demo cũ (Bé Minh An, Bé Gia Huy) được xóa và tạo lại trong bộ 21
+8. **Trang `/ho-so` có thanh lọc theo trường** (Tất cả (9) / Xã A / Xã B / Xã C).
+9. **Docker + server production**: trang công khai đã chạy qua `npm run start` (build cuối 2026-11-15) — home, /ho-so, /ho-so/[id], /quyen-gop, /tra-cuu, /huong-dan, /403 đều trả 200.
+
+**Tài khoản demo mới (mọi mật khẩu `Password123!`):**
+
+| Vai trò | Email | Đơn vị |
+|---|---|---|
+| ADMIN | admin@nuoi-em.vn | Hệ thống |
+| SCHOOL | truong1@nuoi-em.vn / truong2@nuoi-em.vn / truong3@nuoi-em.vn | THAXA01 / THBXA02 / THCXA03 |
+| LOCAL_AUTH | localauth_xa@nuoi-em.vn / localauth_xb@nuoi-em.vn / localauth_xc@nuoi-em.vn | UBXAA01 / UBXAB02 / UBXAC03 |
+
+## 7. Điểm còn lại / bàn giao
 
 - Backend (đồng đội): `POST /api/webhook`, `GET /api/donations/by-ref`, `GET /api/donations/tra-cuu` — contract trong `docs/BACKEND-INTEGRATION-GUIDE.md`.
 - Sau khi backend xong: xóa nút "⚡ Giả lập tiền đã vào" trên trang quyên góp.
 - Sau khi có sao kê thật: cập nhật report.
 
-## 7. File đã thêm/sửa
+## 8. File đã thêm/sửa
 
 - `src/app/page.tsx` (viết lại — trang cộng đồng)
 - `src/app/ho-so/page.tsx`, `ho-so/[id]/page.tsx`, `ho-so/[id]/quyen-gop/page.tsx`, `.../donation-panel.tsx`
 - `src/app/tra-cuu/page.tsx`, `src/app/huong-dan/page.tsx`, `src/app/403/page.tsx`
 - `src/components/public-shell.tsx`, `src/components/progress-bar.tsx`
-- `src/lib/public.ts`
+- `src/lib/public.ts` (kèm try/catch cho DB)
+- `src/app/icon.svg` (favicon)
+- `src/app/layout.tsx` (nạp fontawesome-svg-core/styles.css)
+- `prisma/seed-demo.ts` + `npm run db:seed-demo` (21 hồ sơ mẫu)
 - `docs/BACKEND-INTEGRATION-GUIDE.md`, `docs/reports/2026-11-15-task-5-giao-dien-cong-khai.md`
