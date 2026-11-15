@@ -1,6 +1,6 @@
-# BÁO CÁO — CHECKLIST CỦA TRÌNH BÌNH KHANG · Nuôi Em Blockchain
+# BÁO CÁO — CHECKLIST CỦA TRỊNH BÌNH KHANG · Nuôi Em Blockchain
 
-- **Người thực hiện:** Trình Bình Khang (`trinhbinhkhang-it`)
+- **Người thực hiện:** Trịnh Bình Khang (`trinhbinhkhang-it`)
 - **Ngày báo cáo:** 2026-11-15
 - **Dự án:** Nuoi Em Blockchain — Sao kê từ thiện minh bạch (Next.js + Postgres + Prisma + Hardhat/Sepolia · VietQR)
 - **Repo:** `Kiennguyen0945/nuoi-em-blockchain` · `main` hiện xanh CI, mọi PR đều đã merge
