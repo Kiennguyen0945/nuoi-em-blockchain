@@ -21,8 +21,21 @@ const AVATAR_COLORS = [
   "bg-violet-600",
 ];
 
-export default async function PublicRecordsPage() {
+export default async function PublicRecordsPage({
+  searchParams,
+}: {
+  searchParams?: { school?: string };
+}) {
   const records = await getPublicRecords();
+  const filter = (searchParams?.school ?? "").toUpperCase();
+  const filtered = filter
+    ? records.filter((r) => r.school?.organizationCode === filter)
+    : records;
+  const schoolOptions = Array.from(
+    new Map(
+      records.map((r) => [r.school?.organizationCode ?? "?", r.school?.organizationName ?? ""]),
+    ).entries(),
+  );
 
   return (
     <PublicShell>
@@ -39,7 +52,34 @@ export default async function PublicRecordsPage() {
           </Link>
         </div>
 
-        {records.length === 0 ? (
+        {/* Bộ lọc theo trường */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link
+            href="/ho-so"
+            className={`text-xs font-bold rounded-full px-4 py-2 border ${
+              !filter
+                ? "bg-teal-700 text-white border-teal-700"
+                : "bg-white text-teal-800 border-stone-200 hover:border-teal-400"
+            }`}
+          >
+            Tất cả ({records.length})
+          </Link>
+          {schoolOptions.map(([code, name]) => (
+            <Link
+              key={code}
+              href={`/ho-so?school=${code}`}
+              className={`text-xs font-bold rounded-full px-4 py-2 border ${
+                filter === code
+                  ? "bg-teal-700 text-white border-teal-700"
+                  : "bg-white text-teal-800 border-stone-200 hover:border-teal-400"
+              }`}
+            >
+              {name || code} ({records.filter((r) => r.school?.organizationCode === code).length})
+            </Link>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
           <div className="mt-10 bg-white border border-stone-200 rounded-2xl p-8 text-center">
             <div className="text-4xl text-stone-300"><FontAwesomeIcon icon={faMoon} /></div>
             <p className="mt-2 font-bold text-teal-900">Chưa có hồ sơ nào đang tiếp nhận</p>
@@ -47,7 +87,7 @@ export default async function PublicRecordsPage() {
           </div>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {records.map((r, i) => {
+            {filtered.map((r, i) => {
               const goal = Number(r.goalLimit);
               const pct = goal > 0 ? Math.min(100, Math.round((r.raised / goal) * 100)) : 0;
               return (
