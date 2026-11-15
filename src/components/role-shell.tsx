@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import SignOutButton from "./sign-out-button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWheatAwn } from "@fortawesome/free-solid-svg-icons";
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Quản trị viên (Admin)",
@@ -22,7 +24,7 @@ export default function RoleShell({
     <main className="min-h-screen bg-slate-100">
       <header className="bg-teal-800 text-white px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="font-bold text-lg leading-tight">🌾 NuôiEm</div>
+          <div className="font-bold text-lg leading-tight inline-flex items-center gap-2"><FontAwesomeIcon icon={faWheatAwn} className="text-teal-200" /> NuôiEm</div>
           <div className="text-xs text-teal-100">{ROLE_LABEL[role] ?? role}{name ? ` · ${name}` : ""}</div>
         </div>
         <div className="flex items-center gap-2">
