@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLock } from "@fortawesome/free-solid-svg-icons";
 
 export default function ForbiddenPage() {
   return (
     <main className="min-h-screen bg-[#FBFAF7] flex items-center justify-center p-6 text-center">
       <div>
-        <div className="text-6xl">🔒</div>
+        <div className="text-6xl text-teal-800"><FontAwesomeIcon icon={faLock} /></div>
         <h1 className="mt-3 text-2xl font-black text-teal-900">Bạn không có quyền xem trang này</h1>
         <p className="mt-1 text-sm text-stone-500">
           Hồ sơ thuộc tổ chức khác, hoặc vai trò của bạn không phù hợp.

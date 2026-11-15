@@ -3,6 +3,15 @@ import { notFound } from "next/navigation";
 import PublicShell from "@/components/public-shell";
 import ProgressBar from "@/components/progress-bar";
 import { getPublicRecord, getDonations, formatVND, shortCode } from "@/lib/public";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowLeft,
+  faArrowRight,
+  faSchool,
+  faLandmark,
+  faMoneyBillWave,
+  faLink,
+} from "@fortawesome/free-solid-svg-icons";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +39,7 @@ export default async function PublicRecordDetailPage({
   return (
     <PublicShell>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Link href="/ho-so" className="text-sm text-teal-800 hover:underline">← Về danh sách hồ sơ</Link>
+        <Link href="/ho-so" className="inline-flex items-center gap-1.5 text-sm text-teal-800 hover:underline"><FontAwesomeIcon icon={faArrowLeft} /> Về danh sách hồ sơ</Link>
 
         {/* Hero + progress */}
         <div className="mt-3 bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-sm">
@@ -45,9 +54,9 @@ export default async function PublicRecordDetailPage({
             </div>
             <h1 className="mt-3 text-xl sm:text-2xl font-black leading-snug">{record.situation ?? "Hoàn cảnh khó khăn"}</h1>
             <div className="mt-2 text-xs text-teal-50">
-              🏫 {record.school?.organizationName ?? "—"} ({record.school?.organizationCode ?? ""})
+              <span className="inline-flex items-center gap-1.5"><FontAwesomeIcon icon={faSchool} /> {record.school?.organizationName ?? "—"} ({record.school?.organizationCode ?? ""})</span>
               <br />
-              🏛️ {record.localAuth?.organizationName ?? "—"} ({record.localAuth?.organizationCode ?? ""})
+              <span className="inline-flex items-center gap-1.5"><FontAwesomeIcon icon={faLandmark} /> {record.localAuth?.organizationName ?? "—"} ({record.localAuth?.organizationCode ?? ""})</span>
             </div>
           </div>
 
@@ -62,7 +71,7 @@ export default async function PublicRecordDetailPage({
                 href={`/ho-so/${record.id}/quyen-gop`}
                 className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-teal-900 font-black rounded-xl px-6 py-3 text-sm shadow"
               >
-                💵 Quyên góp ngay
+                <FontAwesomeIcon icon={faMoneyBillWave} /> Quyên góp ngay
               </Link>
             </div>
           </div>
@@ -98,9 +107,7 @@ export default async function PublicRecordDetailPage({
         <div className="mt-4 bg-white border border-stone-200 rounded-2xl p-5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="font-black text-teal-900">Sao kê giao dịch (công khai)</h2>
-            <Link href="/tra-cuu" className="text-[11px] font-semibold text-teal-800 hover:underline">
-              Tra cứu khoản của bạn →
-            </Link>
+            <Link href="/tra-cuu" className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal-800 hover:underline">Tra cứu khoản của bạn <FontAwesomeIcon icon={faArrowRight} /></Link>
           </div>
           {donations.length === 0 ? (
             <p className="mt-3 text-sm text-stone-500">Chưa có giao dịch nào — hãy là người đầu tiên.</p>
@@ -141,7 +148,7 @@ export default async function PublicRecordDetailPage({
 
         {/* Chứng minh toàn vẹn */}
         <div className="mt-4 bg-teal-900 text-teal-50 rounded-2xl p-5 text-sm">
-          <h2 className="font-black text-amber-300">🔗 Toàn vẹn dữ liệu</h2>
+          <h2 className="font-black text-amber-300 inline-flex items-center gap-2"><FontAwesomeIcon icon={faLink} /> Toàn vẹn dữ liệu</h2>
           <p className="mt-1 text-teal-100">
             Hồ sơ này được cam kết trên blockchain bằng{" "}
             <code className="bg-white/10 rounded px-1">commitment = hash(L1 + L2 + salt)</code>.

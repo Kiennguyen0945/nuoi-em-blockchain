@@ -4,6 +4,15 @@ import { auth } from "@/lib/auth";
 import { roleHome } from "@/lib/require-role";
 import PublicShell from "@/components/public-shell";
 import { getPublicHomeStats, formatVND } from "@/lib/public";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSeedling,
+  faMagnifyingGlass,
+  faMobileScreenButton,
+  faReceipt,
+  faCircleCheck,
+  faArrowRight,
+} from "@fortawesome/free-solid-svg-icons";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +42,7 @@ export default async function HomePage() {
         />
         <div className="relative max-w-6xl mx-auto px-4 py-14 sm:py-20 text-white">
           <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest bg-white/10 border border-white/20 rounded-full px-3 py-1">
-            🌱 Cộng đồng nuôi em — sao kê minh bạch
+            <FontAwesomeIcon icon={faSeedling} className="mr-1.5" /> Cộng đồng nuôi em — sao kê minh bạch
           </span>
           <h1 className="mt-4 text-3xl sm:text-5xl font-black leading-tight">
             Mỗi khoản chuyển tới em<br />
@@ -48,7 +57,7 @@ export default async function HomePage() {
               href="/ho-so"
               className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-teal-900 font-bold rounded-xl px-5 py-3 text-sm shadow-lg shadow-black/10"
             >
-              Xem các em đang chờ giúp →
+              Xem các em đang chờ giúp <FontAwesomeIcon icon={faArrowRight} />
             </Link>
             <Link
               href="/huong-dan"
@@ -88,12 +97,12 @@ export default async function HomePage() {
         <p className="text-center text-sm text-stone-500 mt-1">Không cần tạo tài khoản. Không cần ví crypto.</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            { icon: "🔎", title: "1. Chọn một em", body: "Xem danh sách hồ sơ, chọn hoàn cảnh bạn muốn giúp. Mọi thông tin em đều công khai ở mức an toàn." },
-            { icon: "📱", title: "2. Quét mã VietQR", body: "Hệ thống sinh mã QR đúng số tài khoản trường kèm mã hồ sơ ẩn bên trong." },
-            { icon: "🧾", title: "3. Giữ lại mã giao dịch", body: "Nhập mã giao dịch ở trang Tra cứu bất cứ lúc nào để xem khoản của bạn đi tới đâu." },
+            { icon: <FontAwesomeIcon icon={faMagnifyingGlass} className="text-teal-700" />, title: "1. Chọn một em", body: "Xem danh sách hồ sơ, chọn hoàn cảnh bạn muốn giúp. Mọi thông tin em đều công khai ở mức an toàn." },
+            { icon: <FontAwesomeIcon icon={faMobileScreenButton} className="text-teal-700" />, title: "2. Quét mã VietQR", body: "Hệ thống sinh mã QR đúng số tài khoản trường kèm mã hồ sơ ẩn bên trong." },
+            { icon: <FontAwesomeIcon icon={faReceipt} className="text-teal-700" />, title: "3. Giữ lại mã giao dịch", body: "Nhập mã giao dịch ở trang Tra cứu bất cứ lúc nào để xem khoản của bạn đi tới đâu." },
           ].map((s) => (
             <div key={s.title} className="bg-white border border-stone-200 rounded-2xl p-5 text-center shadow-sm">
-              <div className="text-3xl">{s.icon}</div>
+              <div className="text-4xl">{s.icon}</div>
               <div className="mt-2 font-bold text-teal-900">{s.title}</div>
               <p className="mt-1 text-sm text-stone-600 leading-relaxed">{s.body}</p>
             </div>
@@ -107,10 +116,10 @@ export default async function HomePage() {
           <div>
             <h2 className="text-xl font-black text-amber-300">Cam kết với cộng đồng</h2>
             <ul className="mt-3 text-sm space-y-2">
-              <li>✅ 100% giao dịch được ghi nhận công khai</li>
-              <li>✅ Hồ sơ chỉ RECEIVING khi trường + chính quyền cùng ký</li>
-              <li>✅ Không rút/rút lui dữ liệu — commitment lưu vĩnh viễn on-chain</li>
-              <li>✅ Mạnh thường quân ẩn danh, không thu thập thông tin cá nhân</li>
+              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />100% giao dịch được ghi nhận công khai</li>
+              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Hồ sơ chỉ RECEIVING khi trường + chính quyền cùng ký</li>
+              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Không rút/rút lui dữ liệu — commitment lưu vĩnh viễn on-chain</li>
+              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Mạnh thường quân ẩn danh, không thu thập thông tin cá nhân</li>
             </ul>
           </div>
           <div className="text-right sm:text-right">
@@ -118,7 +127,7 @@ export default async function HomePage() {
               href="/ho-so"
               className="inline-block bg-amber-400 hover:bg-amber-300 text-teal-900 font-bold rounded-xl px-6 py-3 text-sm"
             >
-              Chọn hồ sơ để quyên góp →
+              Chọn hồ sơ để quyên góp <FontAwesomeIcon icon={faArrowRight} />
             </Link>
           </div>
         </div>

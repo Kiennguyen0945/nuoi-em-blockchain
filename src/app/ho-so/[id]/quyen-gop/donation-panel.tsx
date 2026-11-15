@@ -1,6 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSchool,
+  faBuildingColumns,
+  faCopy,
+  faBolt,
+  faSeedling,
+  faArrowLeft,
+} from "@fortawesome/free-solid-svg-icons";
 
 type Phase = "amount" | "qr" | "confirmed";
 
@@ -90,7 +99,7 @@ export default function DonationPanel({
         const data = await res.json();
         if (data?.status === "confirmed" || data?.donation) {
           setPhase("confirmed");
-          setStatusNote("✅ Cảm ơn bạn đã quyên góp!");
+          setStatusNote("Cảm ơn bạn đã quyên góp!");
         }
       } catch {
         // im lặng — giữ đếm tiếp
@@ -109,10 +118,11 @@ export default function DonationPanel({
         <div className="md:col-span-2 bg-white border border-stone-200 rounded-2xl p-6">
           <div className="text-xs font-mono text-stone-400">#{shortCode}</div>
           <h1 className="mt-1 text-xl font-black text-teal-900">{situation}</h1>
-          <div className="mt-3 text-sm text-stone-600">
-            🏫 {schoolName || "—"}<br />
-            🏦 TK nhận: <span className="font-mono">{bankAccount ?? "—"}</span>
-          </div>
+            <div className="mt-3 text-sm text-stone-600">
+              <span className="inline-flex items-center gap-1.5"><FontAwesomeIcon icon={faSchool} /> {schoolName || "—"}</span>
+              <br />
+              <span className="inline-flex items-center gap-1.5"><FontAwesomeIcon icon={faBuildingColumns} /> TK nhận: <span className="font-mono">{bankAccount ?? "—"}</span></span>
+            </div>
           <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-[12px] text-amber-900">
             Còn thiếu: <b>{remaining.toLocaleString("vi-VN")} đ</b>
             <br />
@@ -221,13 +231,13 @@ export default function DonationPanel({
             onClick={() => navigator.clipboard?.writeText(ref)}
             className="border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold hover:bg-stone-50"
           >
-            📋 Sao chép mã HS
+            <FontAwesomeIcon icon={faCopy} className="mr-1.5" /> Sao chép mã HS
           </button>
           <button
             onClick={() => setPhase("amount")}
-            className="border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold hover:bg-stone-50"
+            className="border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold hover:bg-stone-50 inline-flex items-center justify-center gap-1.5"
           >
-            ← Đổi số tiền
+            <FontAwesomeIcon icon={faArrowLeft} /> Đổi số tiền
           </button>
         </div>
 
@@ -236,7 +246,7 @@ export default function DonationPanel({
             onClick={() => setPhase("confirmed")}
             className="mt-3 w-full bg-emerald-600 text-white rounded-xl px-4 py-2.5 text-xs font-bold"
           >
-            ⚡ Giả lập “tiền đã vào” (chỉ dùng khi demo)
+            <FontAwesomeIcon icon={faBolt} className="mr-1.5" /> Giả lập “tiền đã vào” (chỉ dùng khi demo)
           </button>
         )}
       </div>
@@ -246,7 +256,7 @@ export default function DonationPanel({
   /* ===== Phase 3: confirmed ===== */
   return (
     <div className="max-w-md mx-auto bg-white border border-emerald-200 rounded-2xl p-8 text-center">
-      <div className="text-6xl">🌱</div>
+      <div className="text-6xl text-emerald-600"><FontAwesomeIcon icon={faSeedling} /></div>
       <h1 className="mt-2 text-2xl font-black text-emerald-700">Cảm ơn tấm lòng của bạn!</h1>
       <p className="mt-1 text-sm text-stone-600">{statusNote}</p>
       <dl className="mt-4 text-left text-[12px] grid grid-cols-2 gap-2">
