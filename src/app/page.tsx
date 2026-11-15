@@ -14,6 +14,8 @@ import {
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 
+
+//Hello, my name is VY
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
