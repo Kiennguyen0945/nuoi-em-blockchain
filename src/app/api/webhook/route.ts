@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { createHash, randomBytes } from "node:crypto";
-
-// Ngân hàng/SePay đôi khi loại bỏ dấu "-" trong nội dung chuyển khoản.
-// Vì vậy phải chấp nhận cả HSxxxxx-xxxx và HSxxxxxxxxx.
-const REF_CODE_REGEX = /HS([A-Z0-9]{5})(?:-)?([A-F0-9]{4})/i;
+import {
+  canAssignToRecord,
+  extractRecordPrefix,
+  extractReferenceCode,
+  extractTransactionId,
+} from "@/lib/sepay";
 
 export async function POST(req: Request) {
   try {
@@ -52,10 +54,8 @@ export async function POST(req: Request) {
     }
 
     // 4. Trích xuất mã hồ sơ (HSxxxxx-xxxx) từ nội dung chuyển khoản (body.content)
-    const searchPool = `${body.content ?? ""} ${body.referenceCode ?? ""}`;
-    const refMatch = searchPool.match(REF_CODE_REGEX);
-
-    if (!refMatch) {
+    const ref = extractReferenceCode(body.content, body.referenceCode);
+    if (!ref) {
       // Trả về 200 với success: false để SePay không cố gửi lại nếu người chuyển ghi sai cú pháp
       return NextResponse.json(
         {
@@ -66,16 +66,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Luôn lưu mã chuẩn có dấu gạch để khớp với mã đang được frontend poll.
-    const ref = `HS${refMatch[1].toUpperCase()}-${refMatch[2].toUpperCase()}`;
-    const prefix = refMatch[1].toLowerCase();
+    const prefix = extractRecordPrefix(ref);
 
     // 5. Lấy mã giao dịch duy nhất từ SePay (body.id)
-    const txId = String(
-      body.id ??
-        body.transactionId ??
-        `MOCK-TX-${Date.now()}-${randomBytes(3).toString("hex").toUpperCase()}`
-    ).trim();
+    const txId =
+      extractTransactionId(body) ??
+      `MOCK-TX-${Date.now()}-${randomBytes(3).toString("hex").toUpperCase()}`;
 
     // 6. Tìm hồ sơ đang RECEIVING khớp với 5 ký tự đầu của ID
     const record = await prisma.record.findFirst({
@@ -89,7 +85,7 @@ export async function POST(req: Request) {
       select: { id: true, goalLimit: true, status: true },
     });
 
-    if (!record) {
+    if (!canAssignToRecord(ref, record)) {
       return NextResponse.json(
         {
           success: false,
