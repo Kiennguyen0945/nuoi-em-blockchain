@@ -48,7 +48,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   }
   if (record.status !== "PENDING_APPROVAL") {
     return NextResponse.json(
-      { error: "Chỉ ký/từ chối khi hồ sơ ở PENDING_APPROVAL" },
+      { error: "Chỉ ký/từ chối khi hồ sơ đang chờ phê duyệt" },
       { status: 409 },
     );
   }

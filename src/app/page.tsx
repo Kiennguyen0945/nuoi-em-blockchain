@@ -119,7 +119,7 @@ export default async function HomePage() {
             <h2 className="text-xl font-black text-amber-300">Cam kết với cộng đồng</h2>
             <ul className="mt-3 text-sm space-y-2">
               <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />100% giao dịch được ghi nhận công khai</li>
-              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Hồ sơ chỉ RECEIVING khi trường + chính quyền cùng ký</li>
+              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Hồ sơ chỉ chuyển sang “Đang nhận quyên góp” khi trường + chính quyền cùng ký</li>
               <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Không rút/rút lui dữ liệu — commitment lưu vĩnh viễn on-chain</li>
               <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Mạnh thường quân ẩn danh, không thu thập thông tin cá nhân</li>
             </ul>

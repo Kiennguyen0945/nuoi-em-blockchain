@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const user = await requireRole("ADMIN");
   return (
-    <RoleShell role="ADMIN" name={user.name} subtitle="Nhập hồ sơ DRAFT · gửi duyệt khi xong">
+    <RoleShell role="ADMIN" name={user.name} subtitle="Nhập hồ sơ bản nháp · gửi duyệt khi xong">
       <RecordsBoard role="ADMIN" />
     </RoleShell>
   );

@@ -11,6 +11,7 @@ import {
   faLock,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
+import { getRecordStatusLabel } from "@/lib/record-status";
 
 type Org = {
   id: string;
@@ -137,7 +138,7 @@ export default function RecordsBoard({ role }: { role: Role }) {
         });
     if (res.ok) {
       setModalOpen(false);
-      showToast(editing ? "Đã cập nhật hồ sơ" : "Đã tạo hồ sơ (DRAFT)");
+      showToast(editing ? "Đã cập nhật hồ sơ" : "Đã tạo hồ sơ (bản nháp)");
       load();
     } else {
       const data = await res.json().catch(() => null);
@@ -158,7 +159,7 @@ export default function RecordsBoard({ role }: { role: Role }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "submit" }),
     });
-    showToast(res.ok ? "Đã gửi duyệt (PENDING_APPROVAL)" : "Không gửi được");
+    showToast(res.ok ? "Đã gửi hồ sơ chờ phê duyệt" : "Không gửi được");
     load();
   };
 
@@ -172,7 +173,7 @@ export default function RecordsBoard({ role }: { role: Role }) {
     if (res.ok) {
       showToast(
         data?.bothSigned
-          ? "Đã ký đủ → hồ sơ chuyển RECEIVING"
+          ? "Đã ký đủ → hồ sơ chuyển sang đang nhận quyên góp"
           : "Đã ký hồ sơ",
       );
     } else {
@@ -249,7 +250,7 @@ export default function RecordsBoard({ role }: { role: Role }) {
                   <td>{fmt(r.goalLimit)}</td>
                   <td>
                     <span className={`inline-block text-[11px] font-bold rounded-full px-2 py-0.5 ${STATUS_STYLE[r.status] ?? "bg-slate-100"}`}>
-                      {r.status}
+                      {getRecordStatusLabel(r.status)}
                     </span>
                   </td>
                   <td className="text-xs text-slate-600">
@@ -260,7 +261,7 @@ export default function RecordsBoard({ role }: { role: Role }) {
                   <td className="whitespace-nowrap">
                     {role === "ADMIN" ? (
                       <div className="flex gap-1">
-                        <button title="Sửa (DRAFT)" disabled={r.status !== "DRAFT"} onClick={() => openEdit(r)} className="border rounded px-2 py-1 disabled:opacity-40"><FontAwesomeIcon icon={faPen} /></button>
+                        <button title="Sửa hồ sơ bản nháp" disabled={r.status !== "DRAFT"} onClick={() => openEdit(r)} className="border rounded px-2 py-1 disabled:opacity-40"><FontAwesomeIcon icon={faPen} /></button>
                         <button title="Gửi duyệt" disabled={r.status !== "DRAFT"} onClick={() => submitForApproval(r)} className="border rounded px-2 py-1 disabled:opacity-40"><FontAwesomeIcon icon={faPaperPlane} /></button>
                         <button title="Xóa" onClick={() => remove(r)} className="border border-red-200 text-red-600 rounded px-2 py-1"><FontAwesomeIcon icon={faTrashCan} /></button>
                       </div>
