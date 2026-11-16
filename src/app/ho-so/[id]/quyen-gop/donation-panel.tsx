@@ -48,19 +48,6 @@ export default function DonationPanel({
 
   const effectiveAmount = custom ? Number(custom) || 0 : amount;
 
-  // Sinh reference_code 1 lần, lưu localStorage để reload không sinh mã mới
-  useEffect(() => {
-    const key = `qr-ref:${recordId}`;
-    const saved = window.localStorage.getItem(key);
-    if (saved) {
-      setRef(saved);
-    } else {
-      const r = randomRef(shortCode);
-      window.localStorage.setItem(key, r);
-      setRef(r);
-    }
-  }, [recordId, shortCode]);
-
   const qrUrl = useMemo(() => {
     if (!bankAccount) return "";
     const params = new URLSearchParams({
@@ -86,7 +73,7 @@ export default function DonationPanel({
 
   // Poll trạng thái giao dịch mỗi 3 giây — backend (nhóm bạn) cài đặt endpoint này
   useEffect(() => {
-    if (phase !== "qr") return;
+    if (phase !== "qr" || !ref) return;
     const poll = window.setInterval(async () => {
       try {
         const res = await fetch(`/api/donations/by-ref?ref=${encodeURIComponent(ref)}`);
@@ -169,7 +156,15 @@ export default function DonationPanel({
             </div>
             <button
               disabled={effectiveAmount < 1000}
-              onClick={() => setPhase("qr")}
+              onClick={() => {
+                // Mỗi lần tạo QR phải có mã mới. Không tái sử dụng mã cũ,
+                // nếu không polling sẽ thấy donation của lần chuyển trước.
+                setRef(randomRef(shortCode));
+                setSecondsLeft(600);
+                setBackendError(false);
+                setStatusNote("Đang chờ tiền vào...");
+                setPhase("qr");
+              }}
               className="bg-teal-700 hover:bg-teal-800 disabled:opacity-40 text-white rounded-xl px-6 py-3 font-bold text-sm"
             >
               Sinh mã VietQR →
