@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-demo": "tsx prisma/seed-demo.ts",
     "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy-charity-ledger.ts --network localhost",
     "test": "npm run test:unit && npm run test:contracts",
     "test:unit": "tsx --env-file-if-exists=.env --test \"test/unit/**/*.test.ts\"",
     "test:contracts": "hardhat test",

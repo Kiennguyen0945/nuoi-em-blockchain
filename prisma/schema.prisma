@@ -58,6 +58,10 @@ model Record {
   bankAccountNumber    String?       @map("bank_account_number")
   schoolSignature      String?       @map("school_signature")
   localAuthSignature   String?       @map("local_auth_signature")
+  commitment           String?       @db.VarChar(66)
+  commitmentSalt       String?       @map("commitment_salt")
+  commitmentAlgorithm  String?       @map("commitment_algorithm")
+  blockchainTxHash     String?       @map("blockchain_tx_hash")
   situation            String?       @db.Text
   recordRejectedReason String?       @map("record_rejected_reason") @db.Text
   status               RecordStatus  @default(DRAFT)
