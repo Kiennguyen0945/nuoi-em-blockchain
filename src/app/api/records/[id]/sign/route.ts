@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
+import { createRecordCommitment } from "@/lib/crypto";
+import { recordCommitmentOnChain } from "@/lib/viem";
 
 type RouteContext = { params: { id: string } };
 
@@ -48,7 +50,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   }
   if (record.status !== "PENDING_APPROVAL") {
     return NextResponse.json(
-      { error: "Chỉ ký/từ chối khi hồ sơ ở PENDING_APPROVAL" },
+      { error: "Chỉ ký/từ chối khi hồ sơ đang chờ phê duyệt" },
       { status: 409 },
     );
   }
@@ -114,17 +116,52 @@ export async function POST(req: Request, { params }: RouteContext) {
     },
   });
 
-  const bothSigned = updated.schoolSignature && updated.localAuthSignature;
-  const finalRecord = bothSigned
-    ? await prisma.record.update({
-        where: { id: record.id },
-        data: { status: "RECEIVING" },
-        include: {
-          school: { select: { organizationName: true, organizationCode: true } },
-          localAuth: { select: { organizationName: true, organizationCode: true } },
-        },
-      })
-    : updated;
+  const bothSigned = Boolean(updated.schoolSignature && updated.localAuthSignature);
+  if (!bothSigned) {
+    return NextResponse.json({ record: updated, bothSigned: false });
+  }
 
-  return NextResponse.json({ record: finalRecord, bothSigned: Boolean(bothSigned) });
+  const commitment = createRecordCommitment({
+    id: record.id,
+    schoolId: record.schoolId,
+    localAuthId: record.localAuthId,
+    goalLimit: record.goalLimit.toString(),
+    bankAccountNumber: record.bankAccountNumber,
+    situation: record.situation,
+    childName: record.childName,
+    childImage: record.childImage,
+  });
+
+  let blockchain;
+  try {
+    blockchain = await recordCommitmentOnChain(record.id, commitment.commitment);
+  } catch (error) {
+    console.error("Không ghi được commitment lên blockchain:", error);
+    return NextResponse.json(
+      { error: "Hai bên đã ký nhưng chưa ghi được hồ sơ lên blockchain. Vui lòng thử lại." },
+      { status: 502 },
+    );
+  }
+
+  const finalRecord = await prisma.record.update({
+    where: { id: record.id },
+    data: {
+      status: "RECEIVING",
+      commitment: commitment.commitment,
+      commitmentSalt: commitment.salt,
+      commitmentAlgorithm: commitment.algorithm,
+      blockchainTxHash: blockchain.hash,
+    },
+    include: {
+      school: { select: { organizationName: true, organizationCode: true } },
+      localAuth: { select: { organizationName: true, organizationCode: true } },
+    },
+  });
+
+  return NextResponse.json({
+    record: finalRecord,
+    bothSigned: true,
+    commitment: commitment.commitment,
+    blockchainTxHash: blockchain.hash,
+  });
 }

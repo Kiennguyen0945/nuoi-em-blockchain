@@ -4,6 +4,7 @@ import PublicShell from "@/components/public-shell";
 import ProgressBar from "@/components/progress-bar";
 import { getPublicRecord, getDonations, formatVND, shortCode } from "@/lib/public";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { getRecordStatusLabel } from "@/lib/record-status";
 import {
   faArrowLeft,
   faArrowRight,
@@ -49,7 +50,7 @@ export default async function PublicRecordDetailPage({
                 Mã hồ sơ #{shortCode(record.id)}
               </span>
               <span className="text-[10px] uppercase font-bold bg-amber-400 text-teal-900 rounded-full px-3 py-1">
-                {record.status}
+                {getRecordStatusLabel(record.status)}
               </span>
             </div>
             <h1 className="mt-3 text-xl sm:text-2xl font-black leading-snug">{record.situation ?? "Hoàn cảnh khó khăn"}</h1>
@@ -132,7 +133,7 @@ export default async function PublicRecordDetailPage({
                       </td>
                       <td>
                         <span className="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5">
-                          Confirmed
+                          Đã xác nhận
                         </span>
                       </td>
                     </tr>
