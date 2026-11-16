@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       select: { id: true, goalLimit: true, status: true },
     });
 
-    if (!canAssignToRecord(ref, record)) {
+    if (!record || !canAssignToRecord(ref, record)) {
       return NextResponse.json(
         {
           success: false,
