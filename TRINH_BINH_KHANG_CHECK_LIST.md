@@ -194,4 +194,4 @@ Mọi việc đều theo đúng chu trình Linear → nhánh `prefix/...` → PR
 
 ---
 
-*Viết bởi Trình Bình Khang (tổng hợp và rà soát cùng trợ lý AI) · 2026-11-15 · `main` xanh CI.*
+*Viết bởi Trịnh Bình Khang (tổng hợp và rà soát cùng trợ lý AI) · 2026-11-15 · `main` xanh CI.*
