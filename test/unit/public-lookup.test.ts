@@ -15,6 +15,19 @@ describe("Tra cứu hồ sơ — normalizeLookupQuery", () => {
   it("trả rỗng khi input rỗng", () => {
     assert.equal(normalizeLookupQuery(""), "");
   });
+
+  it("bỏ được nhiều kiểu whitespace và tab", () => {
+    assert.equal(normalizeLookupQuery("\t HS 699 \n"), "699");
+  });
+
+  it("đầu vào chỉ có HS sẽ trả rỗng", () => {
+    assert.equal(normalizeLookupQuery("HS"), "");
+    assert.equal(normalizeLookupQuery("hs"), "");
+  });
+
+  it("không bị ảnh hưởng bởi ký tự đặc biệt", () => {
+    assert.equal(normalizeLookupQuery("h-s-6-9-3"), "693");
+  });
 });
 
 describe("Tra cứu hồ sơ — recordMatchesQuery", () => {
@@ -33,14 +46,39 @@ describe("Tra cứu hồ sơ — recordMatchesQuery", () => {
     assert.equal(recordMatchesQuery(record, "693df0a8".toLowerCase()), true);
   });
 
-  it("matched theo từ khóa hoàn cảnh", () => {
+  it("matched theo từ khóa hoàn cảnh (full-text đơn giản)", () => {
     assert.equal(recordMatchesQuery(record, "mồ côi"), true);
     assert.equal(recordMatchesQuery(record, "mồcôi"), true);
+    assert.equal(recordMatchesQuery(record, "HOÀN CẢNH"), true);
   });
 
   it("không match khi query quá ngắn hoặc không khớp", () => {
     assert.equal(recordMatchesQuery(record, "6"), false);
     assert.equal(recordMatchesQuery(record, "zzzzz"), false);
     assert.equal(recordMatchesQuery(record, ""), false);
+  });
+
+  it("matched với situation null, bản ghi không có situation", () => {
+    const recordNoSit = {
+      id: "aaaaaaaa-0000-0000-0000-000000000000",
+      situation: null as string | null,
+    };
+    assert.equal(recordMatchesQuery(recordNoSit, "aaaaaaaa"), true);
+    assert.equal(recordMatchesQuery(recordNoSit, "anything"), false);
+  });
+
+  it("matched khi query có khoảng trắng trong từ khóa tiếng Việt", () => {
+    assert.equal(recordMatchesQuery(record, "mồ côi mẹ"), true);
+    assert.equal(recordMatchesQuery(record, "cha làm thuê"), true);
+  });
+
+  it("hoàn cảnh khớp nhờ bỏ dấu cách trong normalize", () => {
+    assert.equal(recordMatchesQuery(record, "hoàn cảnh khó khăn"), true);
+  });
+
+  it("matched theo đoạn giữa UUID (không chỉ prefix)", () => {
+    // Phần "434c" ở giữa cũng match vì ta dùng includes() trên toàn chuỗi
+    assert.equal(recordMatchesQuery(record, "434c"), true);
+    assert.equal(recordMatchesQuery(record, "5c64c0f9"), true);
   });
 });
