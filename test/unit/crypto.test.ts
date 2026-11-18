@@ -1,6 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { createRecordCommitment, encryptLevel2, decryptLevel2 } from "../../src/lib/crypto";
+import {
+  createRecordCommitment,
+  createDonationCommitment,
+  createTransactionCommitment,
+  encryptLevel2,
+  decryptLevel2,
+} from "../../src/lib/crypto";
 
 describe("Level 2 Encryption (AES-256-GCM)", () => {
   it("should encrypt and successfully decrypt back to original text", () => {
@@ -56,5 +62,85 @@ describe("Record commitment (SHA-256)", () => {
     const first = createRecordCommitment(record, "fixed-salt");
     const changed = createRecordCommitment({ ...record, situation: "Hoàn cảnh khác" }, "fixed-salt");
     assert.notEqual(first.commitment, changed.commitment);
+  });
+});
+
+describe("Transaction commitment (SHA-256)", () => {
+  const transaction = {
+    transactionId: "SEPAY-123",
+    amount: "250000",
+    confirmedAt: "2026-11-18T10:20:30.000Z",
+    nonce: "SEPAY-123",
+    recordId: "record-1",
+  };
+
+  it("creates a deterministic bytes32 commitment", () => {
+    const first = createTransactionCommitment(transaction);
+    const second = createTransactionCommitment(transaction);
+
+    assert.equal(first.commitment, second.commitment);
+    assert.match(first.commitment, /^0x[0-9a-f]{64}$/);
+    assert.equal(first.algorithm, "SHA-256");
+  });
+
+  it("changes when transaction data changes", () => {
+    const first = createTransactionCommitment(transaction);
+    const changed = createTransactionCommitment({ ...transaction, amount: "250001" });
+
+    assert.notEqual(first.commitment, changed.commitment);
+  });
+
+  it("normalizes equivalent Date and ISO timestamp inputs", () => {
+    const fromString = createTransactionCommitment(transaction);
+    const fromDate = createTransactionCommitment({
+      ...transaction,
+      confirmedAt: new Date(transaction.confirmedAt),
+    });
+
+    assert.equal(fromString.commitment, fromDate.commitment);
+  });
+
+  it("rejects an invalid confirmation timestamp", () => {
+    assert.throws(
+      () => createTransactionCommitment({ ...transaction, confirmedAt: "not-a-date" }),
+      /confirmedAt không hợp lệ/,
+    );
+  });
+});
+
+describe("Donation commitment (SHA-256)", () => {
+  const donation = {
+    donationId: "donation-123",
+    recordId: "record-001",
+    amount: "2000.00",
+    transactionId: "SEPAY-123",
+    createdAt: "2026-11-18T10:20:30.000Z",
+  };
+
+  it("hashes the complete DonationRecord input deterministically", () => {
+    const first = createDonationCommitment(donation);
+    const second = createDonationCommitment(donation);
+
+    assert.equal(first.commitment, second.commitment);
+    assert.equal(first.donationKey, "donation-123");
+    assert.equal(first.algorithm, "SHA-256");
+    assert.match(first.commitment, /^0x[0-9a-f]{64}$/);
+  });
+
+  it("changes the commitment when any hashed field changes", () => {
+    const first = createDonationCommitment(donation);
+    const changed = createDonationCommitment({ ...donation, amount: "2000.01" });
+
+    assert.notEqual(first.commitment, changed.commitment);
+  });
+
+  it("uses a normalized ISO timestamp", () => {
+    const fromString = createDonationCommitment(donation);
+    const fromDate = createDonationCommitment({
+      ...donation,
+      createdAt: new Date(donation.createdAt),
+    });
+
+    assert.equal(fromString.commitment, fromDate.commitment);
   });
 });
