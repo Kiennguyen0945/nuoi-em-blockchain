@@ -27,6 +27,13 @@ enum ReportStatus {
   ACCEPTED
 }
 
+enum OnchainStatus {
+  ONCHAIN_PENDING
+  ONCHAIN_SUBMITTED
+  ONCHAIN_CONFIRMED
+  ONCHAIN_FAILED
+}
+
 model User {
   id               String      @id @default(uuid())
   username         String?     @unique
@@ -82,13 +89,19 @@ model Record {
 }
 
 model Donation {
-  id              String   @id @default(uuid())
-  recordId        String   @map("record_id")
-  amount          Decimal  @map("amount") @db.Decimal(18, 2)
-  transactionId   String   @unique @map("transaction_id")
-  transactionHash String?  @map("transaction_hash")
-  referenceCode   String?  @map("reference_code")
-  createdAt       DateTime @default(now()) @map("created_at")
+  id                   String        @id @default(uuid())
+  recordId             String        @map("record_id")
+  amount               Decimal       @map("amount") @db.Decimal(18, 2)
+  transactionId        String        @unique @map("transaction_id")
+  transactionHash      String?       @map("transaction_hash")
+  commitment           String?       @unique @db.VarChar(66)
+  referenceCode        String?       @map("reference_code")
+  onchainStatus        OnchainStatus @default(ONCHAIN_PENDING) @map("onchain_status")
+  blockchainTxHash     String?       @map("blockchain_tx_hash")
+  onchainRecordedAt    DateTime?     @map("onchain_recorded_at")
+  onchainError         String?       @map("onchain_error") @db.Text
+  retryCount           Int           @default(0) @map("retry_count")
+  createdAt            DateTime      @default(now()) @map("created_at")
 
   record          Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
 

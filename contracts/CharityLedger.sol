@@ -14,6 +14,7 @@ contract CharityLedger {
 
     // Mapping: mã hồ sơ (campaignId) => CampaignRecord
     mapping(string => CampaignRecord) public records;
+    address public immutable recorder;
 
     event CommitmentRecorded(
         string indexed campaignId,
@@ -24,13 +25,24 @@ contract CharityLedger {
 
     error RecordAlreadyExists(string campaignId);
     error InvalidCommitment();
+    error UnauthorizedRecorder();
+
+    constructor(address _recorder) {
+        if (_recorder == address(0)) revert UnauthorizedRecorder();
+        recorder = _recorder;
+    }
+
+    modifier onlyRecorder() {
+        if (msg.sender != recorder) revert UnauthorizedRecorder();
+        _;
+    }
 
     /**
      * @dev Ghi commitment của hồ sơ lên on-chain khi chuyển sang trạng thái RECEIVING
      * @param campaignId Mã định danh hồ sơ
      * @param commitment Mã băm hash(L1 + L2 + salt)
      */
-    function recordCommitment(string calldata campaignId, bytes32 commitment) external {
+    function recordCommitment(string calldata campaignId, bytes32 commitment) external onlyRecorder {
         if (commitment == bytes32(0)) revert InvalidCommitment();
         if (records[campaignId].timestamp != 0) revert RecordAlreadyExists(campaignId);
 

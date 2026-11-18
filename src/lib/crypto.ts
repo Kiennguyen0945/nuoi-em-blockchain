@@ -19,6 +19,14 @@ export type TransactionCommitmentInput = {
   recordId?: string | null;
 };
 
+export type DonationCommitmentInput = {
+  donationId: string;
+  recordId: string;
+  amount: string | number;
+  transactionId: string;
+  createdAt: Date | string;
+};
+
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12; // Standard 96-bit IV for GCM
 const AUTH_TAG_LENGTH = 16; // Standard 128-bit authentication tag
@@ -47,6 +55,38 @@ export function createTransactionCommitment(input: TransactionCommitmentInput) {
   return {
     algorithm: "SHA-256" as const,
     commitment: `0x${crypto.createHash("sha256").update(canonical, "utf8").digest("hex")}` as `0x${string}`,
+  };
+}
+
+/**
+ * Tạo commitment cho toàn bộ DonationRecord.
+ * Chỉ 5 trường nghiệp vụ được hash; timestamp/recordedBy là metadata do
+ * smart contract ghi nhận tại thời điểm transaction được mined.
+ */
+export function createDonationCommitment(input: DonationCommitmentInput) {
+  const createdAt = new Date(input.createdAt);
+  if (Number.isNaN(createdAt.getTime())) {
+    throw new Error("createdAt không hợp lệ");
+  }
+
+  const canonical = JSON.stringify({
+    domain: "CHARITY_DONATION_V1",
+    donationId: input.donationId.trim(),
+    recordId: input.recordId.trim(),
+    amount: String(input.amount),
+    transactionId: input.transactionId.trim(),
+    createdAt: createdAt.toISOString(),
+  });
+
+  const commitment = `0x${crypto
+    .createHash("sha256")
+    .update(canonical, "utf8")
+    .digest("hex")}` as `0x${string}`;
+
+  return {
+    algorithm: "SHA-256" as const,
+    commitment,
+    donationKey: input.donationId,
   };
 }
 
