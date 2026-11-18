@@ -3,6 +3,21 @@
 import { useState } from "react";
 import PublicShell from "@/components/public-shell";
 
+const TRANSACTION_STATUS_LABELS: Record<string, string> = {
+  CONFIRMED: "Đã xác nhận",
+  PENDING: "Đang chờ xác nhận",
+  PROCESSING: "Đang xử lý",
+  FAILED: "Giao dịch thất bại",
+  CANCELLED: "Đã hủy",
+};
+
+function getTransactionStatusLabel(status?: string): string {
+  const normalizedStatus = status?.trim().toUpperCase();
+  return normalizedStatus
+    ? TRANSACTION_STATUS_LABELS[normalizedStatus] ?? status!
+    : "Đã xác nhận";
+}
+
 export default function TraCuuPage() {
   const [transactionId, setTransactionId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,7 +63,7 @@ export default function TraCuuPage() {
           Nhập mã giao dịch mà app ngân hàng cung cấp sau khi chuyển tiền — không cần đăng nhập, không cần tạo tài khoản.
         </p>
         <form onSubmit={onSubmit} className="mt-5 bg-white border border-stone-200 rounded-2xl p-5 shadow-sm">
-          <label className="text-xs font-bold text-stone-500">Mã giao dịch (transaction_id)</label>
+          <label className="text-xs font-bold text-stone-500">Mã giao dịch</label>
           <input
             required
             value={transactionId}
@@ -69,7 +84,9 @@ export default function TraCuuPage() {
             {result.found ? (
               <>
                 <div className="text-xs text-stone-400">Trạng thái</div>
-                <div className="font-black text-emerald-700 text-lg">{result.status ?? "CONFIRMED"}</div>
+                <div className="font-black text-emerald-700 text-lg">
+                  {getTransactionStatusLabel(result.status)}
+                </div>
                 {result.amount != null && (
                   <div className="mt-2 text-sm">
                     <span className="text-stone-500">Số tiền:</span>{" "}
