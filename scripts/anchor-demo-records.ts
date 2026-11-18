@@ -15,7 +15,6 @@ async function main() {
       commitment: null,
     },
     orderBy: { createdAt: "desc" },
-    take: 5,
     select: {
       id: true,
       status: true,
