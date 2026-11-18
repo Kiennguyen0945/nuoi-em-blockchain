@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { randomBytes } from "node:crypto";
-import { createTransactionCommitment } from "@/lib/crypto";
+import { createDonationCommitment } from "@/lib/crypto";
+import { recordCommitmentOnChain } from "@/lib/viem";
 import {
   canAssignToRecord,
   extractRecordPrefix,
@@ -97,17 +98,7 @@ export async function POST(req: Request) {
     }
 
     // 7. Tạo mã hash giao dịch
-    const confirmedAt = new Date();
-    const txHash = createTransactionCommitment({
-      transactionId: txId,
-      amount: String(amount),
-      confirmedAt,
-      // Dùng transaction ID làm nonce ổn định; webhook retry vẫn tạo cùng hash.
-      nonce: txId,
-      recordId: record.id,
-    }).commitment;
-
-    // 8. Lưu giao dịch & kiểm tra đạt mục tiêu trong 1 Transaction
+    // 7. Lưu giao dịch trước để có donation.id dùng làm khóa on-chain.
     const result = await prisma.$transaction(async (tx) => {
       const donation = await tx.donation.create({
         data: {
@@ -115,7 +106,22 @@ export async function POST(req: Request) {
           amount,
           transactionId: txId,
           referenceCode: ref,
-          transactionHash: txHash,
+        },
+      });
+
+      const commitment = createDonationCommitment({
+        donationId: donation.id,
+        recordId: donation.recordId,
+        amount: donation.amount.toString(),
+        transactionId: donation.transactionId,
+        createdAt: donation.createdAt,
+      }).commitment;
+
+      const updatedDonation = await tx.donation.update({
+        where: { id: donation.id },
+        data: {
+          commitment,
+          transactionHash: commitment,
         },
       });
 
@@ -135,8 +141,44 @@ export async function POST(req: Request) {
         updatedStatus = "WAITING_FOR_REPORT";
       }
 
-      return { donation, totalRaised, updatedStatus };
+      return { donation: updatedDonation, totalRaised, updatedStatus };
     });
+
+    // 8. Ghi commitment lên blockchain sau khi donation đã được lưu off-chain.
+    let onchainStatus: "ONCHAIN_CONFIRMED" | "ONCHAIN_FAILED" = "ONCHAIN_CONFIRMED";
+    let blockchainTxHash: string | null = null;
+    let onchainError: string | null = null;
+
+    try {
+      await prisma.donation.update({
+        where: { id: result.donation.id },
+        data: { onchainStatus: "ONCHAIN_SUBMITTED", retryCount: { increment: 1 } },
+      });
+
+      const blockchain = await recordCommitmentOnChain(
+        result.donation.id,
+        result.donation.commitment as `0x${string}`,
+      );
+      blockchainTxHash = blockchain.hash;
+
+      await prisma.donation.update({
+        where: { id: result.donation.id },
+        data: {
+          onchainStatus: "ONCHAIN_CONFIRMED",
+          blockchainTxHash,
+          onchainRecordedAt: new Date(),
+          onchainError: null,
+        },
+      });
+    } catch (error) {
+      onchainStatus = "ONCHAIN_FAILED";
+      onchainError = error instanceof Error ? error.message : "Lỗi ghi blockchain";
+      await prisma.donation.update({
+        where: { id: result.donation.id },
+        data: { onchainStatus, onchainError },
+      });
+      console.error("Donation blockchain anchoring error:", error);
+    }
 
     // SePay yêu cầu phản hồi HTTP 200 hoặc 201 kèm { "success": true }
     return NextResponse.json(
@@ -149,6 +191,10 @@ export async function POST(req: Request) {
           amount: Number(result.donation.amount),
           referenceCode: result.donation.referenceCode,
           transactionHash: result.donation.transactionHash,
+          commitment: result.donation.commitment,
+          onchainStatus,
+          blockchainTxHash,
+          onchainError,
           recordId: result.donation.recordId,
           createdAt: result.donation.createdAt,
         },

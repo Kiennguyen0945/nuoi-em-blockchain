@@ -49,9 +49,10 @@ Mạnh thường quân đóng góp
 Mã hash giao dịch = TransactionId + dữ liệu + salt
 Người dùng ẩn danh tra cứu giao dịch bằng TransactionId
 
-Trạng thái giao dịch: PENDING_TRASFER  -> CONFIRMED/OVERDUE
+
+
 PENDING_TRANSFER:  gửi mã qr và bắt đầu đếm người chưa lưu donation
-Tiền đã được chuyển thành công và ghi nhận vào Donation: CONFIRMED
+
 
 
 Kịch bản 4:
@@ -185,7 +186,7 @@ Tiêu chí nghiệm thu: Nhận được webhook thử và đọc được trans
 
 [FEAT] Gắn giao dịch với hồ sơ và lưu on-chain
 - Tìm hồ sơ thông qua nội dung giao dịch và gắn giao dịch với hồ sơ
-- Lấy dữ liệu transaction_id và chuyển trạng thái giao dịch từ pending_trasfer sang confirmed
+- Lấy dữ liệu transaction_id
 
 
 

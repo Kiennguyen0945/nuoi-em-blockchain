@@ -31,6 +31,13 @@ const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12; // Standard 96-bit IV for GCM
 const AUTH_TAG_LENGTH = 16; // Standard 128-bit authentication tag
 
+function normalizeAmount(amount: string | number): string {
+  const value = String(amount).trim();
+  if (!/^\d+(\.\d+)?$/.test(value)) throw new Error("amount không hợp lệ");
+  const [whole, fraction = ""] = value.split(".");
+  return `${whole}.${fraction.padEnd(2, "0").slice(0, 2)}`;
+}
+
 /**
  * Tạo commitment bất biến cho một giao dịch đã được xác nhận.
  * Canonical JSON giúp cùng một bộ dữ liệu luôn cho cùng một hash.
@@ -46,7 +53,7 @@ export function createTransactionCommitment(input: TransactionCommitmentInput) {
   const canonical = JSON.stringify({
     domain: "CHARITY_DONATION_TRANSACTION_V1",
     transactionId: input.transactionId.trim(),
-    amount: String(input.amount),
+    amount: normalizeAmount(input.amount),
     confirmedAt: confirmedAt.toISOString(),
     nonce: input.nonce,
     recordId: input.recordId ?? null,
@@ -73,7 +80,7 @@ export function createDonationCommitment(input: DonationCommitmentInput) {
     domain: "CHARITY_DONATION_V1",
     donationId: input.donationId.trim(),
     recordId: input.recordId.trim(),
-    amount: String(input.amount),
+    amount: normalizeAmount(input.amount),
     transactionId: input.transactionId.trim(),
     createdAt: createdAt.toISOString(),
   });
