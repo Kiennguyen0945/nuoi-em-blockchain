@@ -11,7 +11,7 @@ export const publicClient = createPublicClient({
   transport: http(rpcUrl),
 });
 
-const charityLedgerAbi = [
+export const charityLedgerAbi = [
   {
     type: "function",
     name: "recordCommitment",
@@ -22,9 +22,20 @@ const charityLedgerAbi = [
     ],
     outputs: [],
   },
+  {
+    type: "function",
+    name: "getRecord",
+    stateMutability: "view",
+    inputs: [{ name: "campaignId", type: "string" }],
+    outputs: [
+      { name: "commitment", type: "bytes32" },
+      { name: "timestamp", type: "uint256" },
+      { name: "recordedBy", type: "address" },
+    ],
+  },
 ] as const;
 
-function envAddress(): `0x${string}` {
+export function charityLedgerAddress(): `0x${string}` {
   const value = process.env.CHARITY_LEDGER_CONTRACT_ADDRESS
     ?? process.env.NEXT_PUBLIC_CHARITY_LEDGER_CONTRACT_ADDRESS;
   if (!value || !/^0x[0-9a-fA-F]{40}$/.test(value)) {
@@ -52,7 +63,7 @@ export async function recordCommitmentOnChain(campaignId: string, commitment: `0
     transport: http(rpcUrl),
   });
   const hash = await walletClient.writeContract({
-    address: envAddress(),
+    address: charityLedgerAddress(),
     abi: charityLedgerAbi,
     functionName: "recordCommitment",
     args: [campaignId, commitment],
@@ -60,6 +71,23 @@ export async function recordCommitmentOnChain(campaignId: string, commitment: `0
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error("Blockchain transaction reverted");
   return { hash, recordedBy: account.address };
+}
+
+/** Đọc commitment đã ghi của một hồ sơ trực tiếp từ CharityLedger. */
+export async function readRecordCommitmentOnChain(campaignId: string) {
+  const [commitment, timestamp, recordedBy] = await publicClient.readContract({
+    address: charityLedgerAddress(),
+    abi: charityLedgerAbi,
+    functionName: "getRecord",
+    args: [campaignId],
+  });
+
+  return {
+    commitment,
+    timestamp,
+    recordedBy,
+    contractAddress: charityLedgerAddress(),
+  };
 }
 
 

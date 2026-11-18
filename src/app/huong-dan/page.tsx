@@ -1,3 +1,4 @@
+import Link from "next/link";
 import PublicShell from "@/components/public-shell";
 
 export default function HuongDanPage() {
@@ -56,6 +57,12 @@ export default function HuongDanPage() {
               dấu xác thực ban đầu để biết thông tin có bị chỉnh sửa sau khi
               công bố hay không.
             </p>
+            <Link
+              href="/kiem-chung"
+              className="mt-4 inline-flex rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-teal-800"
+            >
+              Mở màn hình kiểm chứng blockchain →
+            </Link>
           </li>
         </ol>
 
