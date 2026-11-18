@@ -5,7 +5,7 @@ import { getPublicRecord, shortCode } from "@/lib/public";
 import { getRecordStatusLabel } from "@/lib/record-status";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDove, faArrowRight } from "@fortawesome/free-solid-svg-icons";
-
+ 
 export const dynamic = "force-dynamic";
 
 export default async function DonatePage({ params }: { params: { id: string } }) {
