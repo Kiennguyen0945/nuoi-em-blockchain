@@ -18,6 +18,7 @@ export default function PublicShell({ children }: { children: ReactNode }) {
           </a>
           <nav className="flex items-center gap-2 text-sm">
             <a href="/ho-so" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Danh sách hồ sơ</a>
+            <a href="/tra-cuu-ho-so" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Tra cứu hồ sơ</a>
             <a href="/tra-cuu" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Tra cứu</a>
             <a href="/huong-dan" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Vì sao minh bạch?</a>
             <a href="/login" className="px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white hover:text-teal-800 font-semibold">Đăng nhập</a>
