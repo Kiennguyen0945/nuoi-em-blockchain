@@ -11,9 +11,44 @@ export type CommitmentInput = {
   childImage: string | null;
 };
 
+export type TransactionCommitmentInput = {
+  transactionId: string;
+  amount: string | number;
+  confirmedAt: Date | string;
+  nonce: string;
+  recordId?: string | null;
+};
+
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12; // Standard 96-bit IV for GCM
 const AUTH_TAG_LENGTH = 16; // Standard 128-bit authentication tag
+
+/**
+ * Tạo commitment bất biến cho một giao dịch đã được xác nhận.
+ * Canonical JSON giúp cùng một bộ dữ liệu luôn cho cùng một hash.
+ * Không dùng số tiền dạng floating point khi gọi hàm; truyền số tiền dạng
+ * chuỗi thập phân từ database để tránh sai lệch do làm tròn.
+ */
+export function createTransactionCommitment(input: TransactionCommitmentInput) {
+  const confirmedAt = new Date(input.confirmedAt);
+  if (Number.isNaN(confirmedAt.getTime())) {
+    throw new Error("confirmedAt không hợp lệ");
+  }
+
+  const canonical = JSON.stringify({
+    domain: "CHARITY_DONATION_TRANSACTION_V1",
+    transactionId: input.transactionId.trim(),
+    amount: String(input.amount),
+    confirmedAt: confirmedAt.toISOString(),
+    nonce: input.nonce,
+    recordId: input.recordId ?? null,
+  });
+
+  return {
+    algorithm: "SHA-256" as const,
+    commitment: `0x${crypto.createHash("sha256").update(canonical, "utf8").digest("hex")}` as `0x${string}`,
+  };
+}
 
 /**
  * Tạo commitment ổn định cho hồ sơ. Dữ liệu được sắp xếp cố định để

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
+import { createTransactionCommitment } from "@/lib/crypto";
 import {
   canAssignToRecord,
   extractRecordPrefix,
@@ -96,12 +97,15 @@ export async function POST(req: Request) {
     }
 
     // 7. Tạo mã hash giao dịch
-    const salt = process.env.ENCRYPTION_SALT ?? "charity-salt-secret";
-    const txHash =
-      "0x" +
-      createHash("sha256")
-        .update(`${txId}:${amount}:${record.id}:${salt}`)
-        .digest("hex");
+    const confirmedAt = new Date();
+    const txHash = createTransactionCommitment({
+      transactionId: txId,
+      amount: String(amount),
+      confirmedAt,
+      // Dùng transaction ID làm nonce ổn định; webhook retry vẫn tạo cùng hash.
+      nonce: txId,
+      recordId: record.id,
+    }).commitment;
 
     // 8. Lưu giao dịch & kiểm tra đạt mục tiêu trong 1 Transaction
     const result = await prisma.$transaction(async (tx) => {
