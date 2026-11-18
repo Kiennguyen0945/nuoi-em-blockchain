@@ -82,10 +82,10 @@ async function deployCharityLedger(): Promise<{
   deployer: `0x${string}`;
   walletClients: Awaited<ReturnType<typeof hre.viem.getWalletClients>>;
 }> {
-  const deployed = await hre.viem.deployContract("CharityLedger");
-  const charityLedger = deployed as unknown as CharityLedgerContract;
   const walletClients = await hre.viem.getWalletClients();
   const deployer = walletClients[0].account.address as `0x${string}`;
+  const deployed = await hre.viem.deployContract("CharityLedger", [deployer]);
+  const charityLedger = deployed as unknown as CharityLedgerContract;
   return { charityLedger, deployer, walletClients };
 }
 
@@ -220,7 +220,7 @@ describe("CharityLedger Smart Contract", function () {
     );
   });
 
-  it("should record with the correct sender (walletClients[1])", async function () {
+  it("should reject a sender that is not the backend recorder", async function () {
     const { charityLedger, walletClients } = await deployCharityLedger();
     assert.ok(walletClients.length >= 2, "Hardhat phải có >= 2 wallet clients");
 
@@ -228,16 +228,18 @@ describe("CharityLedger Smart Contract", function () {
     const commitment = makeCommitment("ef");
     const senderAddress = walletClients[1].account.address as `0x${string}`;
 
-    await charityLedger.write.recordCommitment([campaignId, commitment], {
-      account: senderAddress,
-    });
-
-    const saved = toRecord(await charityLedger.read.getRecord([campaignId]));
-    assert.equal(saved.commitment, commitment);
-    assert.equal(
-      saved.recordedBy.toLowerCase(),
-      senderAddress.toLowerCase(),
-      "recordedBy phải trùng với sender = walletClients[1]",
+    await assert.rejects(
+      async () => charityLedger.write.recordCommitment([campaignId, commitment], {
+        account: senderAddress,
+      }),
+      (err: Error) => {
+        assert.ok(
+          (err.message ?? "").includes("UnauthorizedRecorder") ||
+            (err.message ?? "").includes("Unauthorized") ||
+            (err.message ?? "").includes("revert"),
+        );
+        return true;
+      },
     );
   });
 });

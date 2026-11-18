@@ -1,11 +1,12 @@
-import { formatEther } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { publicClient } from "../src/lib/viem";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
 async function main() {
+  const { formatEther } = await import("viem");
+  const { privateKeyToAccount } = await import("viem/accounts");
+  const { publicClient } = await import("../src/lib/viem");
+
   console.log("Checking blockchain node connection...");
   const blockNumber = await publicClient.getBlockNumber();
   console.log(` Connected! Current Block Number: ${blockNumber}`);

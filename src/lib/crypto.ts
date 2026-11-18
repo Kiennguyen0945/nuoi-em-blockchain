@@ -11,9 +11,91 @@ export type CommitmentInput = {
   childImage: string | null;
 };
 
+export type TransactionCommitmentInput = {
+  transactionId: string;
+  amount: string | number;
+  confirmedAt: Date | string;
+  nonce: string;
+  recordId?: string | null;
+};
+
+export type DonationCommitmentInput = {
+  donationId: string;
+  recordId: string;
+  amount: string | number;
+  transactionId: string;
+  createdAt: Date | string;
+};
+
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12; // Standard 96-bit IV for GCM
 const AUTH_TAG_LENGTH = 16; // Standard 128-bit authentication tag
+
+function normalizeAmount(amount: string | number): string {
+  const value = String(amount).trim();
+  if (!/^\d+(\.\d+)?$/.test(value)) throw new Error("amount không hợp lệ");
+  const [whole, fraction = ""] = value.split(".");
+  return `${whole}.${fraction.padEnd(2, "0").slice(0, 2)}`;
+}
+
+/**
+ * Tạo commitment bất biến cho một giao dịch đã được xác nhận.
+ * Canonical JSON giúp cùng một bộ dữ liệu luôn cho cùng một hash.
+ * Không dùng số tiền dạng floating point khi gọi hàm; truyền số tiền dạng
+ * chuỗi thập phân từ database để tránh sai lệch do làm tròn.
+ */
+export function createTransactionCommitment(input: TransactionCommitmentInput) {
+  const confirmedAt = new Date(input.confirmedAt);
+  if (Number.isNaN(confirmedAt.getTime())) {
+    throw new Error("confirmedAt không hợp lệ");
+  }
+
+  const canonical = JSON.stringify({
+    domain: "CHARITY_DONATION_TRANSACTION_V1",
+    transactionId: input.transactionId.trim(),
+    amount: normalizeAmount(input.amount),
+    confirmedAt: confirmedAt.toISOString(),
+    nonce: input.nonce,
+    recordId: input.recordId ?? null,
+  });
+
+  return {
+    algorithm: "SHA-256" as const,
+    commitment: `0x${crypto.createHash("sha256").update(canonical, "utf8").digest("hex")}` as `0x${string}`,
+  };
+}
+
+/**
+ * Tạo commitment cho toàn bộ DonationRecord.
+ * Chỉ 5 trường nghiệp vụ được hash; timestamp/recordedBy là metadata do
+ * smart contract ghi nhận tại thời điểm transaction được mined.
+ */
+export function createDonationCommitment(input: DonationCommitmentInput) {
+  const createdAt = new Date(input.createdAt);
+  if (Number.isNaN(createdAt.getTime())) {
+    throw new Error("createdAt không hợp lệ");
+  }
+
+  const canonical = JSON.stringify({
+    domain: "CHARITY_DONATION_V1",
+    donationId: input.donationId.trim(),
+    recordId: input.recordId.trim(),
+    amount: normalizeAmount(input.amount),
+    transactionId: input.transactionId.trim(),
+    createdAt: createdAt.toISOString(),
+  });
+
+  const commitment = `0x${crypto
+    .createHash("sha256")
+    .update(canonical, "utf8")
+    .digest("hex")}` as `0x${string}`;
+
+  return {
+    algorithm: "SHA-256" as const,
+    commitment,
+    donationKey: input.donationId,
+  };
+}
 
 /**
  * Tạo commitment ổn định cho hồ sơ. Dữ liệu được sắp xếp cố định để
