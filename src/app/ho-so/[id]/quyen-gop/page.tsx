@@ -5,6 +5,7 @@ import { getPublicRecord, shortCode } from "@/lib/public";
 import { getRecordStatusLabel } from "@/lib/record-status";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDove, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { verifyAndUpdateRecordIntegrity } from "@/lib/record-integrity";
  
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,23 @@ export default async function DonatePage({ params }: { params: { id: string } })
           <a href="/ho-so" className="mt-4 inline-flex items-center gap-1.5 bg-amber-400 text-teal-900 font-bold rounded-xl px-5 py-2.5 text-sm">
             Về danh sách hồ sơ <FontAwesomeIcon icon={faArrowRight} />
           </a>
+        </div>
+      </PublicShell>
+    );
+  }
+
+  const integrity = await verifyAndUpdateRecordIntegrity(record.id);
+  if (integrity.status !== "VALID") {
+    return (
+      <PublicShell>
+        <div className="max-w-md mx-auto px-4 py-16 text-center">
+          <div className="text-5xl text-red-600">🔴</div>
+          <h1 className="mt-3 text-xl font-black text-red-800">
+            Quyên góp tạm thời bị tạm dừng
+          </h1>
+          <p className="mt-2 text-sm text-stone-600">
+            Hồ sơ chưa vượt qua kiểm tra tính toàn vẹn. Vui lòng quay lại sau.
+          </p>
         </div>
       </PublicShell>
     );
