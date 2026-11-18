@@ -63,6 +63,24 @@ describe("Record commitment (SHA-256)", () => {
     const changed = createRecordCommitment({ ...record, situation: "Hoàn cảnh khác" }, "fixed-salt");
     assert.notEqual(first.commitment, changed.commitment);
   });
+
+  it("changes the commitment when the receiving bank account changes", () => {
+    const first = createRecordCommitment(record, "fixed-salt");
+    const changed = createRecordCommitment(
+      { ...record, bankAccountNumber: "9704999999999999" },
+      "fixed-salt",
+    );
+    assert.notEqual(first.commitment, changed.commitment);
+  });
+
+  it("keeps the commitment stable when the same bank account is used", () => {
+    const first = createRecordCommitment(record, "fixed-salt");
+    const second = createRecordCommitment(
+      { ...record, bankAccountNumber: "9704000000000001" },
+      "fixed-salt",
+    );
+    assert.equal(first.commitment, second.commitment);
+  });
 });
 
 describe("Transaction commitment (SHA-256)", () => {
