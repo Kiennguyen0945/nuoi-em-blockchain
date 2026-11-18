@@ -42,7 +42,7 @@ export default async function HomePage() {
           aria-hidden
           className="absolute -left-20 bottom-0 h-72 w-72 rounded-full bg-teal-300/10 blur-3xl"
         />
-        <div className="relative max-w-6xl mx-auto px-4 py-14 sm:py-20 text-white">
+        <div className="relative max-w-6xl mx-auto px-4 pt-8 pb-14 sm:pt-12 sm:pb-20 text-white">
           <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest bg-white/10 border border-white/20 rounded-full px-3 py-1">
             <FontAwesomeIcon icon={faSeedling} className="mr-1.5" /> Cộng đồng nuôi em — sao kê minh bạch
           </span>
@@ -51,8 +51,8 @@ export default async function HomePage() {
             <span className="text-amber-300">đều được theo dõi tới cùng.</span>
           </h1>
           <p className="mt-4 text-teal-50 max-w-xl text-sm sm:text-base leading-relaxed">
-            Nuôi Em dùng blockchain để cam kết tính nguyên vẹn của hồ sơ, và VietQR để mạnh thường quân
-            quyên góp ẩn danh. Trường ký, chính quyền ký — tiền tới em, không đứt đoạn.
+            Nuôi Em ứng dụng Blockchain để bảo chứng tính toàn vẹn của hồ sơ, 
+            hướng đến minh bạch trong hoạt động hỗ trợ trẻ em. Hồ sơ được xác thực bởi nhà trường và chính quyền, góp phần kết nối sự đóng góp của mạnh thường quân với các em nhỏ một cách minh bạch, đáng tin cậy.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -96,11 +96,11 @@ export default async function HomePage() {
       {/* 3 bước quyên góp */}
       <section className="max-w-6xl mx-auto px-4 py-10">
         <h2 className="text-xl sm:text-2xl font-black text-teal-900 text-center">Quyên góp chỉ với 3 bước</h2>
-        <p className="text-center text-sm text-stone-500 mt-1">Không cần tạo tài khoản. Không cần ví crypto.</p>
+        <p className="text-center text-sm text-stone-500 mt-1">Không cần tạo tài khoản. Không lưu lại thông tin cá nhân</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
             { icon: <FontAwesomeIcon icon={faMagnifyingGlass} className="text-teal-700" />, title: "1. Chọn một em", body: "Xem danh sách hồ sơ, chọn hoàn cảnh bạn muốn giúp. Mọi thông tin em đều công khai ở mức an toàn." },
-            { icon: <FontAwesomeIcon icon={faMobileScreenButton} className="text-teal-700" />, title: "2. Quét mã VietQR", body: "Hệ thống sinh mã QR đúng số tài khoản trường kèm mã hồ sơ ẩn bên trong." },
+            { icon: <FontAwesomeIcon icon={faMobileScreenButton} className="text-teal-700" />, title: "2. Quét mã QR", body: "Hệ thống sinh mã QR đúng số tài khoản trường kèm mã hồ sơ ẩn bên trong." },
             { icon: <FontAwesomeIcon icon={faReceipt} className="text-teal-700" />, title: "3. Giữ lại mã giao dịch", body: "Nhập mã giao dịch ở trang Tra cứu bất cứ lúc nào để xem khoản của bạn đi tới đâu." },
           ].map((s) => (
             <div key={s.title} className="bg-white border border-stone-200 rounded-2xl p-5 text-center shadow-sm">
@@ -119,8 +119,8 @@ export default async function HomePage() {
             <h2 className="text-xl font-black text-amber-300">Cam kết với cộng đồng</h2>
             <ul className="mt-3 text-sm space-y-2">
               <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />100% giao dịch được ghi nhận công khai</li>
-              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Hồ sơ chỉ chuyển sang “Đang nhận quyên góp” khi trường + chính quyền cùng ký</li>
-              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Không rút/rút lui dữ liệu — commitment lưu vĩnh viễn on-chain</li>
+              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Hồ sơ chỉ chuyển sang “Đang nhận quyên góp” khi Nhà trường + Chính quyền địa phương ký xác nhận</li>
+              <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Không rút/rút lui dữ liệu — Dữ liệu lưu vĩnh viễn trên mạng Blockchain minh bạch không thể bị sửa</li>
               <li><FontAwesomeIcon icon={faCircleCheck} className="text-amber-300 mr-1.5" />Mạnh thường quân ẩn danh, không thu thập thông tin cá nhân</li>
             </ul>
           </div>
@@ -129,7 +129,7 @@ export default async function HomePage() {
               href="/ho-so"
               className="inline-block bg-amber-400 hover:bg-amber-300 text-teal-900 font-bold rounded-xl px-6 py-3 text-sm"
             >
-              Chọn hồ sơ để quyên góp <FontAwesomeIcon icon={faArrowRight} />
+              Quyên góp ngay <FontAwesomeIcon icon={faArrowRight} />
             </Link>
           </div>
         </div>

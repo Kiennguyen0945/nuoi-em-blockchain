@@ -24,7 +24,7 @@ export default function TraCuuPage() {
         `/api/donations/tra-cuu?transactionId=${encodeURIComponent(transactionId.trim())}`,
       );
       if (res.status === 404 || res.status === 501) {
-        setResult({ found: false, note: "Backend chưa cài đặt /api/donations/tra-cuu" });
+        setResult({ found: false, note: "Mã giao dịch không tồn tại!" });
         return;
       }
       if (!res.ok) {
@@ -43,7 +43,7 @@ export default function TraCuuPage() {
   return (
     <PublicShell>
       <div className="max-w-xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-black text-teal-900">Tra cứu khoản quyên góp của bạn</h1>
+        <h1 className="text-2xl font-black text-teal-900">Tra cứu giao dịch công khai của Nuôi em</h1>
         <p className="mt-1 text-sm text-stone-500">
           Nhập mã giao dịch mà app ngân hàng cung cấp sau khi chuyển tiền — không cần đăng nhập, không cần tạo tài khoản.
         </p>
@@ -97,7 +97,6 @@ export default function TraCuuPage() {
         )}
 
         <div className="mt-6 text-[11px] text-stone-400 leading-relaxed">
-          Hệ thống chỉ đối soát khoản chuyển qua VietQR vào đúng số tài khoản trường kèm nội dung chứa mã hồ sơ.
           Danh tính người chuyển không được thu thập.
         </div>
       </div>

@@ -114,21 +114,21 @@ export default async function PublicRecordDetailPage({
             <p className="mt-3 text-sm text-stone-500">Chưa có giao dịch nào — hãy là người đầu tiên.</p>
           ) : (
             <div className="mt-3 overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full table-fixed text-sm">
                 <thead>
                   <tr className="text-left text-[11px] text-stone-500 border-b border-stone-200">
-                    <th className="py-2">Mã giao dịch</th>
-                    <th>Số tiền</th>
-                    <th>Thời gian</th>
-                    <th>Trạng thái</th>
+                    <th className="w-[32%] py-2 pr-3">Mã giao dịch</th>
+                    <th className="w-[19%] pr-3">Số tiền</th>
+                    <th className="w-[29%] pr-3">Thời gian</th>
+                    <th className="w-[20%]">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
                   {donations.map((d) => (
                     <tr key={d.id} className="border-b border-stone-100">
-                      <td className="py-2 font-mono text-xs">{d.transactionId.slice(0, 12)}…</td>
-                      <td className="font-bold text-teal-900">{formatVND(d.amount)}</td>
-                      <td className="text-xs text-stone-600">
+                      <td className="py-2 pr-3 font-mono text-xs break-all">{d.transactionId}</td>
+                      <td className="pr-3 font-bold text-teal-900">{formatVND(d.amount)}</td>
+                      <td className="pr-3 text-xs text-stone-600">
                         {new Date(d.createdAt).toLocaleString("vi-VN")}
                       </td>
                       <td>
