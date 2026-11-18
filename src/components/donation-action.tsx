@@ -10,11 +10,22 @@ export default function DonationAction({ recordId }: { recordId: string }) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/records/${recordId}/integrity`)
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 7_000);
+
+    fetch(`/api/records/${recordId}/integrity`, { signal: controller.signal })
       .then((response) => response.json())
       .then((data) => setStatus(data.status ?? "UNKNOWN"))
       .catch(() => setStatus("UNKNOWN"))
-      .finally(() => setChecking(false));
+      .finally(() => {
+        window.clearTimeout(timeout);
+        setChecking(false);
+      });
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
   }, [recordId]);
 
   if (status !== "VALID") {
