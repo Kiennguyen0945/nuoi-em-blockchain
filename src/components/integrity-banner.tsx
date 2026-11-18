@@ -16,7 +16,10 @@ export default function IntegrityBanner({
 
   useEffect(() => {
     let active = true;
-    fetch(`/api/records/${recordId}/integrity`)
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 7_000);
+
+    fetch(`/api/records/${recordId}/integrity`, { signal: controller.signal })
       .then((response) => response.json())
       .then((data) => {
         if (!active) return;
@@ -28,6 +31,8 @@ export default function IntegrityBanner({
       });
     return () => {
       active = false;
+      window.clearTimeout(timeout);
+      controller.abort();
     };
   }, [recordId]);
 

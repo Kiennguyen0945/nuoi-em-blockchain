@@ -6,12 +6,12 @@ copy example.env và đổi tên thành .env
 
 Cập nhật cơ sở dữ liệu `npm run db:push` và `npm run db:generate`
 
+## Một số lệnh quan trọng
 `npm run test:node`
-
 npx prisma db push --force-reset
 npm run db:seed-demo
-
 npm run deploy:local
+npm run anchor:demo
 
 ## Cấu trúc dự án
 
