@@ -8,10 +8,10 @@ export const blockchainChain = isLocal ? hardhat : sepolia;
 
 export const publicClient = createPublicClient({
   chain: blockchainChain,
-  transport: http(rpcUrl),
+  transport: http(rpcUrl, { timeout: 5_000 }),
 });
 
-const charityLedgerAbi = [
+export const charityLedgerAbi = [
   {
     type: "function",
     name: "recordCommitment",
@@ -35,7 +35,7 @@ const charityLedgerAbi = [
   },
 ] as const;
 
-function envAddress(): `0x${string}` {
+export function charityLedgerAddress(): `0x${string}` {
   const value = process.env.CHARITY_LEDGER_CONTRACT_ADDRESS
     ?? process.env.NEXT_PUBLIC_CHARITY_LEDGER_CONTRACT_ADDRESS;
   if (!value || !/^0x[0-9a-fA-F]{40}$/.test(value)) {
@@ -60,10 +60,10 @@ export async function recordCommitmentOnChain(campaignId: string, commitment: `0
   const walletClient = createWalletClient({
     account,
     chain: blockchainChain,
-    transport: http(rpcUrl),
+    transport: http(rpcUrl, { timeout: 5_000 }),
   });
   const hash = await walletClient.writeContract({
-    address: envAddress(),
+    address: charityLedgerAddress(),
     abi: charityLedgerAbi,
     functionName: "recordCommitment",
     args: [campaignId, commitment],
@@ -72,17 +72,25 @@ export async function recordCommitmentOnChain(campaignId: string, commitment: `0
   if (receipt.status !== "success") throw new Error("Blockchain transaction reverted");
   return { hash, recordedBy: account.address };
 }
-
 /** Đọc commitment của một hồ sơ từ blockchain, không tạo transaction. */
 export async function getRecordCommitmentOnChain(campaignId: string) {
-  const [commitment, timestamp, recordedBy] = await publicClient.readContract({
-    address: envAddress(),
-    abi: charityLedgerAbi,
-    functionName: "getRecord",
-    args: [campaignId],
-  });
+  const [commitment, timestamp, recordedBy] =
+    await publicClient.readContract({
+      address: charityLedgerAddress(),
+      abi: charityLedgerAbi,
+      functionName: "getRecord",
+      args: [campaignId],
+    });
 
-  return { commitment, timestamp, recordedBy };
+  return {
+    commitment,
+    timestamp,
+    recordedBy,
+    contractAddress: charityLedgerAddress(),
+  };
 }
+
+// Giữ tương thích với các nơi đang dùng tên hàm cũ.
+export const readRecordCommitmentOnChain = getRecordCommitmentOnChain;
 
 

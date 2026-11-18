@@ -43,8 +43,9 @@ export default function DonationPanel({
   const [ref, setRef] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(600);
   const [statusNote, setStatusNote] = useState("Đang chờ tiền vào...");
-  const [backendError, setBackendError] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const [demoSubmitting, setDemoSubmitting] = useState(false);
+  const [demoError, setDemoError] = useState("");
 
   const effectiveAmount = custom ? Number(custom) || 0 : amount;
 
@@ -78,7 +79,6 @@ export default function DonationPanel({
       try {
         const res = await fetch(`/api/donations/by-ref?ref=${encodeURIComponent(ref)}`);
         if (res.status === 404 || res.status === 501) {
-          setBackendError(true);
           setStatusNote("Backend chưa cài đặt — dùng nút giả lập bên dưới để test");
           return;
         }
@@ -94,6 +94,27 @@ export default function DonationPanel({
     }, 3000);
     return () => window.clearInterval(poll);
   }, [phase, ref]);
+
+  async function simulateDemoPayment() {
+    if (demoSubmitting) return;
+    setDemoSubmitting(true);
+    setDemoError("");
+    try {
+      const response = await fetch("/api/donations/demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recordId, amount: effectiveAmount, referenceCode: ref }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Không thể tạo giao dịch demo");
+      setStatusNote("Đã ghi nhận giao dịch thành công!");
+      setPhase("confirmed");
+    } catch (error) {
+      setDemoError(error instanceof Error ? error.message : "Không thể tạo giao dịch demo");
+    } finally {
+      setDemoSubmitting(false);
+    }
+  }
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
@@ -161,18 +182,15 @@ export default function DonationPanel({
                 // nếu không polling sẽ thấy donation của lần chuyển trước.
                 setRef(randomRef(shortCode));
                 setSecondsLeft(600);
-                setBackendError(false);
+                setDemoError("");
                 setStatusNote("Đang chờ tiền vào...");
                 setPhase("qr");
               }}
               className="bg-teal-700 hover:bg-teal-800 disabled:opacity-40 text-white rounded-xl px-6 py-3 font-bold text-sm"
             >
-              Sinh mã VietQR →
+              Xác nhận
             </button>
           </div>
-          <p className="mt-3 text-[11px] text-stone-400">
-            Nội dung chuyển khoản mặc định chứa mã hồ sơ ẩn danh — bạn có thể sao chép nguyên dòng, không sửa kẻo hệ thống không ghép được khoản của bạn.
-          </p>
         </div>
       </div>
     );
@@ -236,14 +254,17 @@ export default function DonationPanel({
           </button>
         </div>
 
-        {backendError && (
+        <>
           <button
-            onClick={() => setPhase("confirmed")}
-            className="mt-3 w-full bg-emerald-600 text-white rounded-xl px-4 py-2.5 text-xs font-bold"
+            type="button"
+            onClick={() => void simulateDemoPayment()}
+            disabled={demoSubmitting}
+            className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-xl px-4 py-2.5 text-xs font-bold"
           >
-            <FontAwesomeIcon icon={faBolt} className="mr-1.5" /> Giả lập “tiền đã vào” (chỉ dùng khi demo)
+            <FontAwesomeIcon icon={faBolt} className="mr-1.5" /> Giả lập giao dịch thành công
           </button>
-        )}
+        </>
+        {demoError && <p className="mt-2 text-xs text-red-600">{demoError}</p>}
       </div>
     );
   }
@@ -252,8 +273,11 @@ export default function DonationPanel({
   return (
     <div className="max-w-md mx-auto bg-white border border-emerald-200 rounded-2xl p-8 text-center">
       <div className="text-6xl text-emerald-600"><FontAwesomeIcon icon={faSeedling} /></div>
-      <h1 className="mt-2 text-2xl font-black text-emerald-700">Cảm ơn tấm lòng của bạn!</h1>
+      <h1 className="mt-2 text-2xl font-black text-emerald-700">Khoản quyên góp đã được ghi nhận</h1>
       <p className="mt-1 text-sm text-stone-600">{statusNote}</p>
+      <p className="mt-3 text-xs leading-relaxed text-stone-500">
+        Khoản tiền của bạn đã được lưu vào sao kê và có thể được kiểm tra công khai.
+      </p>
       <dl className="mt-4 text-left text-[12px] grid grid-cols-2 gap-2">
         <div className="bg-emerald-50 rounded-lg p-2">
           <dt className="text-stone-400">Mã HS</dt>
@@ -269,6 +293,12 @@ export default function DonationPanel({
         className="mt-5 inline-block bg-teal-700 hover:bg-teal-800 text-white rounded-xl px-6 py-3 font-bold text-sm"
       >
         Xem sao kê hồ sơ →
+      </a>
+      <a
+        href={`/kiem-chung?recordId=${encodeURIComponent(recordId)}`}
+        className="mt-3 block text-sm font-semibold text-teal-800 hover:underline"
+      >
+        Xem thông tin minh bạch →
       </a>
     </div>
   );

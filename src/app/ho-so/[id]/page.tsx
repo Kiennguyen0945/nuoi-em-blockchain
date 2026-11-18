@@ -148,13 +148,18 @@ export default async function PublicRecordDetailPage({
 
         {/* Chứng minh toàn vẹn */}
         <div className="mt-4 bg-teal-900 text-teal-50 rounded-2xl p-5 text-sm">
-          <h2 className="font-black text-amber-300 inline-flex items-center gap-2"><FontAwesomeIcon icon={faLink} /> Toàn vẹn dữ liệu</h2>
+          <h2 className="font-black text-amber-300 inline-flex items-center gap-2"><FontAwesomeIcon icon={faLink} /> Hồ sơ minh bạch</h2>
           <p className="mt-1 text-teal-100">
-            Hồ sơ này được cam kết trên blockchain bằng{" "}
-            <code className="bg-white/10 rounded px-1">commitment = hash(L1 + L2 + salt)</code>.
-            Bất kỳ ai sửa hồ sơ sau khi ghi cũng làm lệch mã băm. Chi tiết xem{" "}
+            Thông tin hồ sơ đã được ghi nhận để mọi thay đổi sau này đều có thể được phát hiện.
+            Bạn có thể tự kiểm tra thông tin bất cứ lúc nào. Xem thêm tại{" "}
             <Link href="/huong-dan" className="underline font-semibold">Vì sao minh bạch?</Link>.
           </p>
+          <Link
+            href={`/kiem-chung?recordId=${encodeURIComponent(record.id)}`}
+            className="mt-4 inline-flex rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-teal-900 hover:bg-amber-300"
+          >
+            Kiểm tra thông tin hồ sơ →
+          </Link>
         </div>
       </div>
     </PublicShell>
