@@ -5,6 +5,8 @@ import ProgressBar from "@/components/progress-bar";
 import { getPublicRecord, getDonations, formatVND, shortCode } from "@/lib/public";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getRecordStatusLabel } from "@/lib/record-status";
+import IntegrityBanner from "@/components/integrity-banner";
+import DonationAction from "@/components/donation-action";
 import {
   faArrowLeft,
   faArrowRight,
@@ -68,15 +70,12 @@ export default async function PublicRecordDetailPage({
                 {donations.length} lượt chuyển · Tài khoản tiếp nhận:{" "}
                 <span className="font-mono">{record.bankAccountNumber ?? "—"}</span>
               </div>
-              <Link
-                href={`/ho-so/${record.id}/quyen-gop`}
-                className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-teal-900 font-black rounded-xl px-6 py-3 text-sm shadow"
-              >
-                <FontAwesomeIcon icon={faMoneyBillWave} /> Quyên góp ngay
-              </Link>
+              <DonationAction recordId={record.id} />
             </div>
           </div>
         </div>
+
+        <IntegrityBanner recordId={record.id} receiving={record.status === "RECEIVING"} />
 
         {/* Timeline trạng thái */}
         <div className="mt-4 bg-white border border-stone-200 rounded-2xl p-5">

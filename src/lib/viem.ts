@@ -22,6 +22,17 @@ const charityLedgerAbi = [
     ],
     outputs: [],
   },
+  {
+    type: "function",
+    name: "getRecord",
+    stateMutability: "view",
+    inputs: [{ name: "campaignId", type: "string" }],
+    outputs: [
+      { name: "commitment", type: "bytes32" },
+      { name: "timestamp", type: "uint256" },
+      { name: "recordedBy", type: "address" },
+    ],
+  },
 ] as const;
 
 function envAddress(): `0x${string}` {
@@ -60,6 +71,18 @@ export async function recordCommitmentOnChain(campaignId: string, commitment: `0
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success") throw new Error("Blockchain transaction reverted");
   return { hash, recordedBy: account.address };
+}
+
+/** Đọc commitment của một hồ sơ từ blockchain, không tạo transaction. */
+export async function getRecordCommitmentOnChain(campaignId: string) {
+  const [commitment, timestamp, recordedBy] = await publicClient.readContract({
+    address: envAddress(),
+    abi: charityLedgerAbi,
+    functionName: "getRecord",
+    args: [campaignId],
+  });
+
+  return { commitment, timestamp, recordedBy };
 }
 
 

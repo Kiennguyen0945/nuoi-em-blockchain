@@ -14,12 +14,11 @@ School: Ký
 LocalAuth: Ký
 
 Trạng thái hồ sơ
-DRAFT -> PENDING_APPROVAL -> RECEIVING -> WAITING_FOR_REPORT -> CLOSED
+DRAFT -> PENDING_APPROVAL -> RECEIVING -> CLOSED
 
 DRAFT: Là bản nháp, admin có thể chỉnh sửa tại đây. Admin có thể nhập và thấy thông tin cấp 2 lúc này. Admin đưa từ DRAFT sang PENDING_APPROVAL
 PENDING_APPROVAL: Đợi School và LocalAuth ký
 RECEIVING: là hồ sơ chỉ chuyển sang RECEIVING khi cả School và LocalAuth ký, và đang trong trạng thái nhận tiền
-WAITING_FOR_REPORT khi đã nhận đủ chỉ tiêu, do hệ thống tự chuyển
 CLOSED: Report đã được chấp nhận bởi cơ quan chức năng
 
 
@@ -54,20 +53,6 @@ Người dùng ẩn danh tra cứu giao dịch bằng TransactionId
 PENDING_TRANSFER:  gửi mã qr và bắt đầu đếm người chưa lưu donation
 
 
-
-Kịch bản 4:
-School nộp minh chứng về việc trẻ đã nhận tiền
-- Hồ sơ ở trạng thái WAITING_FOR_REPORT
-	- Trường đưa ảnh minh chứng đã che thông tin nhạy cảm
-WAITING_FOR_REPORT
--> PENDING_REQUEST: Minh chứng của trường đang được đợi phê duyệt
-	-> Minh chứng chưa được hiển thị công khai
--> REJECTED: LocalAuth từ chối với lý do
-	-> chuyển về PENDING_REQUEST cho nhà trường chỉnh sửa
-	-> Đây là trạng thái của minh chứng, không phải hồ sơ
--> ACCEPTED: LocalAuth chấp nhận
-	-> Minh chứng được hiển thị công khai
--> CLOSED: Đóng hồ sơ
 
 
 
@@ -193,3 +178,24 @@ Tiêu chí nghiệm thu: Nhận được webhook thử và đọc được trans
 [FEAT] Cơ chế xác thực phân quyền xem của admin, school và localauth
 Admin xem và nhập L2 khi hồ sơ ở draft. Admin không xem được L2 từ approval trở lên. School chỉ xem trẻ em trường mình. LocalAuth chỉ xem trẻ em khu vực mình.
 Có test cho từng quy tắc, đều pass.
+
+
+[FEAT] Nhà trường tạo hồ sơ
+Nhà trường có thể tự tạo hồ sơ
+Nhà trường đưa cho LocalAuth ký
+Hồ sơ ở trạng thái Receiving và đưa lên on-chain
+
+
+[FEAT] Cơ chế xác thực tính toàn vẹn của hồ sơ RECEIVING
+Khi hồ sơ 
+
+
+[FEAT]
+
+Tra cứu bỏ phần webhook chưa ghi -> đổi thành không tìm thấy
+Phần nhập số tài khoản ngân hàng cho phép lựa chọn ngân hàng và hiện tại chỉ hỗ trợ MB Bank
+Xóa chờ báo cáo và chuyển sang đã hoàn tất
+bỏ phần ghi chú toàn vẹn dữ liệu trong trang ho-so
+hiển thị mã giao dịch sau khi giao dịch thành công để tra cứu
+Loại bỏ các trường/dòng chú thích không cần thiết ở frontend
+Trang chủ sẽ xuất hiện mặc định thay cho trang đăng nhập. Đăng xuất hiện trang chủ thay vì trang đăng nhập
