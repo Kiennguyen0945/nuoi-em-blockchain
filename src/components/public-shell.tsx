@@ -8,7 +8,7 @@ import { faWheatAwn, faShieldHalved, faLink } from "@fortawesome/free-solid-svg-
  */
 export default function PublicShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#FBFAF7] text-stone-800">
+    <div className="min-h-screen bg-[#FBFAF7] text-stone-800 flex flex-col">
       {/* Top bar */}
       <header className="bg-[#0F766E] text-white">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
@@ -18,6 +18,7 @@ export default function PublicShell({ children }: { children: ReactNode }) {
           </a>
           <nav className="flex items-center gap-2 text-sm">
             <a href="/ho-so" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Danh sách hồ sơ</a>
+            <a href="/tra-cuu-ho-so" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Tra cứu hồ sơ</a>
             <a href="/tra-cuu" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Tra cứu</a>
             <a href="/huong-dan" className="hidden sm:inline px-3 py-1.5 rounded-lg hover:bg-white/10">Vì sao minh bạch?</a>
             <a href="/login" className="px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white hover:text-teal-800 font-semibold">Đăng nhập</a>
@@ -26,7 +27,7 @@ export default function PublicShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* Nội dung */}
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
 
       {/* Footer */}
       <footer className="bg-teal-900 text-teal-100 text-xs">
