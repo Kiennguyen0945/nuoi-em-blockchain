@@ -1,4 +1,22 @@
 
+## Chạy toàn bộ dự án
+
+File `start-all.ps1` sẽ tự động khởi động Docker (PostgreSQL và pgAdmin), chuẩn bị Prisma, chạy Hardhat local blockchain, deploy smart contract và khởi động Next.js.
+
+Chạy bằng PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start-all.ps1
+```
+
+Sau khi chạy:
+
+- Ứng dụng: http://localhost:3000
+- pgAdmin: http://localhost:5050
+- Hardhat RPC: http://127.0.0.1:8545
+
+Nhấn `Ctrl+C` để dừng ứng dụng và blockchain. PostgreSQL/pgAdmin vẫn tiếp tục chạy.
+
 ## Mới clone Project về thì làm gì?
 
 copy example.env và đổi tên thành .env
