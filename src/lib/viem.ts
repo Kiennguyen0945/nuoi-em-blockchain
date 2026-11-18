@@ -8,7 +8,7 @@ export const blockchainChain = isLocal ? hardhat : sepolia;
 
 export const publicClient = createPublicClient({
   chain: blockchainChain,
-  transport: http(rpcUrl),
+  transport: http(rpcUrl, { timeout: 5_000 }),
 });
 
 export const charityLedgerAbi = [
@@ -60,7 +60,7 @@ export async function recordCommitmentOnChain(campaignId: string, commitment: `0
   const walletClient = createWalletClient({
     account,
     chain: blockchainChain,
-    transport: http(rpcUrl),
+    transport: http(rpcUrl, { timeout: 5_000 }),
   });
   const hash = await walletClient.writeContract({
     address: charityLedgerAddress(),
@@ -72,15 +72,15 @@ export async function recordCommitmentOnChain(campaignId: string, commitment: `0
   if (receipt.status !== "success") throw new Error("Blockchain transaction reverted");
   return { hash, recordedBy: account.address };
 }
-
-/** Đọc commitment đã ghi của một hồ sơ trực tiếp từ CharityLedger. */
-export async function readRecordCommitmentOnChain(campaignId: string) {
-  const [commitment, timestamp, recordedBy] = await publicClient.readContract({
-    address: charityLedgerAddress(),
-    abi: charityLedgerAbi,
-    functionName: "getRecord",
-    args: [campaignId],
-  });
+/** Đọc commitment của một hồ sơ từ blockchain, không tạo transaction. */
+export async function getRecordCommitmentOnChain(campaignId: string) {
+  const [commitment, timestamp, recordedBy] =
+    await publicClient.readContract({
+      address: charityLedgerAddress(),
+      abi: charityLedgerAbi,
+      functionName: "getRecord",
+      args: [campaignId],
+    });
 
   return {
     commitment,
@@ -89,5 +89,8 @@ export async function readRecordCommitmentOnChain(campaignId: string) {
     contractAddress: charityLedgerAddress(),
   };
 }
+
+// Giữ tương thích với các nơi đang dùng tên hàm cũ.
+export const readRecordCommitmentOnChain = getRecordCommitmentOnChain;
 
 
